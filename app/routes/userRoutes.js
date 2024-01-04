@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const useController = require("../controllers/userController");
-const verifyToken = require("../middlewares/verifyToken");
+const verifyToken = require("../middlewares/authMiddleware");
 
 router.post("/login", useController.login);
 router.post("/", useController.register);
