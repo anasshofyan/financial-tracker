@@ -7,7 +7,7 @@ const secretKey = process.env.SECRET_KEY;
 
 const register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, name, email, password } = req.body;
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -21,6 +21,7 @@ const register = async (req, res) => {
     // Create a new user
     const newUser = new User({
       username,
+      name,
       email,
       password: hashedPassword,
     });
@@ -34,6 +35,7 @@ const register = async (req, res) => {
         user: {
           id: savedUser._id,
           username: savedUser.username,
+          name: savedUser.name,
           email: savedUser.email,
         },
       },
@@ -94,4 +96,46 @@ const deleteUser = async (req, res) => {
     sendResponse(res, false, "Failed to delete user", 500);
   }
 };
-module.exports = { register, getList, update, deleteUser };
+
+const login = async (req, res) => {
+  try {
+    const { input, password } = req.body;
+
+    const user = await User.findOne({
+      $or: [{ username: input }, { email: input }],
+    });
+
+    if (!user) {
+      return sendResponse(res, false, "Invalid credentials", 401);
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return sendResponse(res, false, "Invalid credentials", 401);
+    }
+
+    const token = jwt.sign(
+      {
+        user: {
+          id: user._id,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+        },
+      },
+      secretKey
+    );
+
+    sendResponse(res, true, "Login successfully", 200, {
+      token,
+      user: user,
+    });
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      sendResponse(res, false, "Validation failed", 400, err.errors);
+    }
+    sendResponse(res, false, err.message, 500);
+  }
+};
+
+module.exports = { register, getList, update, deleteUser, login };
