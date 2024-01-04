@@ -85,4 +85,13 @@ const update = async (req, res) => {
   }
 };
 
-module.exports = { register, getList, update };
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    sendResponse(res, true, "Delete user success", 200, user);
+  } catch (err) {
+    sendResponse(res, false, "Failed to delete user", 500);
+  }
+};
+module.exports = { register, getList, update, deleteUser };
