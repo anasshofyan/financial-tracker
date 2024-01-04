@@ -35,7 +35,8 @@ const register = async (req, res) => {
           email: savedUser.email,
         },
       },
-      secretKey
+      secretKey,
+      { expiresIn: "1m" }
     );
 
     sendResponse(res, true, "User created successfully", 201, {
@@ -119,7 +120,8 @@ const login = async (req, res) => {
           email: user.email,
         },
       },
-      secretKey
+      secretKey,
+      { expiresIn: "1m" }
     );
 
     sendResponse(res, true, "Login successfully", 200, {
