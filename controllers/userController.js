@@ -14,11 +14,9 @@ const register = async (req, res) => {
       return sendResponse(res, false, "User already exists", 400);
     }
 
-    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user
     const newUser = new User({
       username,
       name,
@@ -26,10 +24,8 @@ const register = async (req, res) => {
       password: hashedPassword,
     });
 
-    // Save the user to the database
     const savedUser = await newUser.save();
 
-    // Create and return a JWT token
     const token = jwt.sign(
       {
         user: {
