@@ -6,9 +6,9 @@ const { sendResponse } = require("../utils/response.js");
 const secretKey = process.env.SECRET_KEY;
 
 const register = async (req, res) => {
-  try {
-    const { username, name, email, password } = req.body;
+  const { username, name, email, password } = req.body;
 
+  try {
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return sendResponse(res, false, "User already exists", 400);
@@ -65,10 +65,10 @@ const getList = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { username, role, email, password } = req.body;
+  const { id } = req.params;
+  const { username, role, email, password } = req.body;
 
+  try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -98,9 +98,9 @@ const deleteUser = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  try {
-    const { input, password } = req.body;
+  const { input, password } = req.body;
 
+  try {
     const user = await User.findOne({
       $or: [{ username: input }, { email: input }],
     });
