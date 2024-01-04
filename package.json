@@ -4,8 +4,8 @@
   "description": "Learning nodejs CRUD with express",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node app/app.js",
+    "dev": "nodemon app/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
