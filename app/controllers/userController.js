@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendResponse } = require("../utils/response.js");
+const { generateToken } = require("../middlewares/authMiddleware.js");
 
 const secretKey = process.env.SECRET_KEY;
 
@@ -26,18 +27,7 @@ const register = async (req, res) => {
 
     const savedUser = await newUser.save();
 
-    const token = jwt.sign(
-      {
-        user: {
-          id: savedUser._id,
-          username: savedUser.username,
-          name: savedUser.name,
-          email: savedUser.email,
-        },
-      },
-      secretKey,
-      { expiresIn: "1m" }
-    );
+    const token = generateToken(savedUser);
 
     sendResponse(res, true, "User created successfully", 201, {
       token,
@@ -111,18 +101,7 @@ const login = async (req, res) => {
       return sendResponse(res, false, "Invalid credentials", 401);
     }
 
-    const token = jwt.sign(
-      {
-        user: {
-          id: user._id,
-          username: user.username,
-          name: user.name,
-          email: user.email,
-        },
-      },
-      secretKey,
-      { expiresIn: "1m" }
-    );
+    const token = generateToken(user);
 
     sendResponse(res, true, "Login successfully", 200, {
       token,
