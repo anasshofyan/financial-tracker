@@ -53,7 +53,7 @@ const register = async (req, res) => {
   }
 };
 
-const getUsers = async (req, res) => {
+const getListUser = async (req, res) => {
   try {
     const users = await User.find();
     sendResponse(res, true, "Get list user success", 200, users);
@@ -62,4 +62,4 @@ const getUsers = async (req, res) => {
   }
 };
 
-module.exports = { register, getUsers };
+module.exports = { register, getListUser };
