@@ -53,7 +53,7 @@ const register = async (req, res) => {
   }
 };
 
-const getListUser = async (req, res) => {
+const getList = async (req, res) => {
   try {
     const users = await User.find();
     sendResponse(res, true, "Get list user success", 200, users);
@@ -62,4 +62,27 @@ const getListUser = async (req, res) => {
   }
 };
 
-module.exports = { register, getListUser };
+const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, role, email, password } = req.body;
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { username, role, email, password: hashedPassword },
+      { new: true }
+    );
+    sendResponse(res, true, "Update user success", 200, user);
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      sendResponse(res, false, "Validation failed", 400, err.errors);
+    } else {
+      sendResponse(res, false, "Failed to update user", 500);
+    }
+  }
+};
+
+module.exports = { register, getList, update };
