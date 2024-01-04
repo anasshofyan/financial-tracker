@@ -14,11 +14,19 @@ const verifyToken = (req, res, next) => {
   } else {
     jwt.verify(token, secretKey, (err, decoded) => {
       if (err) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid token",
-          data: {},
-        });
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({
+            success: false,
+            message: "Token expired",
+            data: {},
+          });
+        } else {
+          return res.status(401).json({
+            success: false,
+            message: "Failed to authenticate token",
+            data: {},
+          });
+        }
       } else {
         req.decoded = decoded;
         next();
