@@ -1,10 +1,7 @@
 const User = require('../models/userModel')
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
 const { sendResponse } = require('../utils/response.js')
 const { generateToken } = require('../middlewares/authMiddleware.js')
-
-const secretKey = process.env.SECRET_KEY
 
 const register = async (req, res) => {
   const { username, name, email, password } = req.body
@@ -62,7 +59,7 @@ const update = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       id,
       { username, role, email, password: hashedPassword },
-      { new: true },
+      { new: true }
     )
     sendResponse(res, true, 'Update user success', 200, user)
   } catch (err) {
