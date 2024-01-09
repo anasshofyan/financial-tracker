@@ -1,6 +1,5 @@
 const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
-const jwt = require('jsonwebtoken')
 
 const create = async (req, res) => {
   const { icon, name, type, subCategories } = req.body
