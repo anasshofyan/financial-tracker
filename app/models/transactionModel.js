@@ -17,6 +17,7 @@ const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
+    enum: ['expense', 'income'],
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

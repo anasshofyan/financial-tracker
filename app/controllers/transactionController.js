@@ -1,16 +1,25 @@
 const Transaction = require('../models/transactionModel')
+const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 
 const create = async (req, res) => {
-  const { amount, description, category, type } = req.body
+  const { amount, description, categoryId } = req.body
 
   const loggedInUserId = req.decoded.user.id
 
   try {
+    const category = await Category.findById(categoryId)
+
+    if (!category) {
+      return sendResponse(res, false, 'Category Not Found', 400, {})
+    }
+
+    const type = category.type
+
     const newTransaction = new Transaction({
       amount,
       description,
-      category,
+      category: categoryId,
       type,
       createdBy: loggedInUserId,
     })
@@ -34,10 +43,6 @@ const getList = async (req, res) => {
     const transactions = await Transaction.find({ createdBy: loggedInUserId }).populate({
       path: 'category',
       model: 'Category',
-      populate: {
-        path: 'subCategories',
-        model: 'Subcategory',
-      },
     })
 
     sendResponse(res, true, 'Get list transaction success', 200, transactions)
@@ -71,12 +76,12 @@ const getDetail = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
-  const { amount, description, category, type } = req.body
+  const { amount, description, categoryId, type } = req.body
 
   try {
     const transaction = await Transaction.findByIdAndUpdate(
       id,
-      { amount, description, category, type },
+      { amount, description, categoryId, type },
       { new: true }
     )
     sendResponse(res, true, 'Update transaction success', 200, transaction)

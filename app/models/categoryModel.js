@@ -12,13 +12,8 @@ const categorySchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
+    enum: ['expense', 'income'],
   },
-  subCategories: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subategory',
-    },
-  ],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

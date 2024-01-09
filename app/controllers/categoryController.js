@@ -2,7 +2,7 @@ const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 
 const create = async (req, res) => {
-  const { icon, name, type, subCategories } = req.body
+  const { icon, name, type } = req.body
 
   const loggedInUserId = req.decoded.user.id
 
@@ -11,7 +11,6 @@ const create = async (req, res) => {
       icon,
       name,
       type,
-      subCategories,
       createdBy: loggedInUserId,
     })
 
@@ -31,10 +30,7 @@ const getList = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
 
-    const categories = await Category.find({ createdBy: loggedInUserId }).populate({
-      path: 'subCategories',
-      model: 'Subcategory',
-    })
+    const categories = await Category.find({ createdBy: loggedInUserId })
 
     sendResponse(res, true, 'Get list category success', 200, categories)
   } catch (err) {
@@ -66,12 +62,12 @@ const getDetail = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
-  const { icon, name, type, subCategories } = req.body
+  const { icon, name, type } = req.body
 
   try {
     const loggedInUserId = req.decoded.user.id
     const category = await Category.findOneAndUpdate(
-      { _id: id, subCategories: subCategories, createdBy: loggedInUserId },
+      { _id: id, createdBy: loggedInUserId },
       { icon, name, type },
       { new: true }
     )
