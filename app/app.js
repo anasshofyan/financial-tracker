@@ -38,7 +38,9 @@ app.use(responseLogMiddleware)
 
 // Use Routes
 const userRouter = require('./routes/userRoutes')
-app.use('/users', userRouter)
+const categoryRouter = require('./routes/categoryRoutes')
+app.use('/api/v1/users', userRouter)
+app.use('/api/v1/category', categoryRouter)
 
 // Start the server
 app.listen(port, () => console.log(`Server running on port ${port}`))
