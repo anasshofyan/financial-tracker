@@ -11,28 +11,28 @@ This is a simple CRUD project using Node.js and Express to manage user data.
 
 1. Clone this repository:
 
-    ```bash
-    git clone https://github.com/username/crud-express.git
-    cd crud-express
-    ```
+   ```bash
+   git clone https://github.com/username/crud-express.git
+   cd crud-express
+   ```
 
 2. Install dependencies:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. Configure the `.env` file:
 
-    Create a `.env` file in the project folder and add the following configuration:
+   Create a `.env` file in the project folder and add the following configuration:
 
-    ```env
-    PORT=5000
-    DB_CONNECT=mongodb://localhost:27017/crud-express
-    SECRET_KEY=your_secret_key
-    ```
+   ```env
+   PORT=5000
+   DB_CONNECT=mongodb://localhost:27017/crud-express
+   SECRET_KEY=your_secret_key
+   ```
 
-    Replace `your_secret_key` with the secret key of your choice.
+   Replace `your_secret_key` with the secret key of your choice.
 
 ## Running the Application
 
@@ -40,17 +40,17 @@ This is a simple CRUD project using Node.js and Express to manage user data.
 
 2. Run the application:
 
-    ```bash
-    npm start
-    ```
+   ```bash
+   npm start
+   ```
 
-    Or if you want to use nodemon for development:
+   Or if you want to use nodemon for development:
 
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 
-    The application will run at [http://localhost:5000](http://localhost:5000).
+   The application will run at [http://localhost:5000](http://localhost:5000).
 
 ## Usage
 
