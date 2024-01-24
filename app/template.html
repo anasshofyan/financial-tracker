@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Tracker Server</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
+  <style>
+    .body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .message-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .animated-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #4CAF50; /* Hijau */
+      margin-bottom: 10px; /* Jarak antara lingkaran dan teks */
+      animation: pulse 2s infinite; /* Animasi kedip-kedip */
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-200">
+  <div class="body">
+    <div class="message-container p-6">
+      <div class="animated-circle"></div>
+      <h1 class="text-green-600 mt-3 text-xl md:text-2xl lg:text-3xl">Server Financial Tracker is active</h1>
+    </div>
+  </div>
+</body>
+</html>

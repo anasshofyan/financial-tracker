@@ -1,3 +1,4 @@
+const path = require('path')
 const express = require('express')
 const mongoosee = require('mongoose')
 const bodyParser = require('body-parser')
@@ -48,7 +49,8 @@ app.use('/api/v1/transactions', transactionRouter)
 
 // Middleware for handling root path
 app.get('/', (req, res) => {
-  sendResponse(res, true, 'Server Financial Tracker is active', 200, {})
+  const htmlContent = path.join(__dirname, 'template.html')
+  res.sendFile(htmlContent)
 })
 
 // Middleware for handling errors
