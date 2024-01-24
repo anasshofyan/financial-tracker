@@ -44,5 +44,11 @@ const transactionRouter = require('./routes/transactionRoutes')
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/category', categoryRouter)
 app.use('/api/v1/transactions', transactionRouter)
+
+// Middleware for handling errors
+app.use((res) => {
+  res.status(404).json({ success: false, message: 'Route not found' })
+})
+
 // Start the server
 app.listen(port, () => console.log(`Server running on port ${port}`))
