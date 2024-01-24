@@ -40,19 +40,20 @@ app.use(responseLogMiddleware)
 const userRouter = require('./routes/userRoutes')
 const categoryRouter = require('./routes/categoryRoutes')
 const transactionRouter = require('./routes/transactionRoutes')
+const { sendResponse } = require('./utils/response')
 
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/category', categoryRouter)
 app.use('/api/v1/transactions', transactionRouter)
 
 // Middleware for handling root path
-app.get('/', (res) => {
-  res.status(200).json({ success: true, message: 'Server active' })
+app.get('/', (req, res) => {
+  sendResponse(res, true, 'Server Financial Tracker is active', 200, {})
 })
 
 // Middleware for handling errors
-app.use((res) => {
-  res.status(404).json({ success: false, message: 'Route not found' })
+app.use((req, res) => {
+  sendResponse(res, false, 'Route not found', 404, {})
 })
 
 // Start the server
