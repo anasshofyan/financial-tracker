@@ -45,6 +45,11 @@ app.use('/api/v1/users', userRouter)
 app.use('/api/v1/category', categoryRouter)
 app.use('/api/v1/transactions', transactionRouter)
 
+// Middleware for handling root path
+app.get('/', (res) => {
+  res.status(200).json({ success: true, message: 'Server active' })
+})
+
 // Middleware for handling errors
 app.use((res) => {
   res.status(404).json({ success: false, message: 'Route not found' })
