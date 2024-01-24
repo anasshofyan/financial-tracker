@@ -1,13 +1,11 @@
 {
-  "name": "crud-express",
+  "name": "financial-tracker-server",
   "version": "1.0.0",
-  "description": "Learning nodejs CRUD with express",
+  "description": "Financial Tracker with express",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Building the application...'",
     "start": "node app/app.js",
     "dev": "nodemon app/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
