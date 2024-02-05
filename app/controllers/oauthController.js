@@ -41,11 +41,11 @@ const oauthController = async (req, res) => {
       user: savedUser,
     })
 
-    try {
-      res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}`)
-    } catch (error) {
-      console.log(error)
-    }
+    // try {
+    //   res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}`)
+    // } catch (error) {
+    //   console.log(error)
+    // }
   } catch (error) {
     console.error(error)
     sendResponse(res, false, 'Internal Server Error', 500, {})
