@@ -3,8 +3,9 @@ const Schema = mongoose.Schema
 
 const userSchema = new Schema(
   {
-    username: { type: String, required: [true, 'Username is required!'] },
-    name: { type: String, required: [true, 'Name is required!'], minlength: 3 },
+    username: { type: String },
+    name: { type: String, minlength: 3 },
+    picture: { type: String },
     email: {
       type: String,
       required: [true, 'Email is required!'],
@@ -12,14 +13,16 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required!'],
       minlength: 6,
     },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    googleId: { type: String },
+    googleAccessToken: { type: String },
+    googleRefreshToken: { type: String },
   },
   {
     timestamps: true,
-  }
+  },
 )
 
 const User = mongoose.model('User', userSchema)
