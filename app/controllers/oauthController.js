@@ -1,10 +1,10 @@
-const User = require('../models/userModel')
+const User = require('../models/userModel.js')
 const { sendResponse } = require('../utils/response.js')
 const { generateToken } = require('../middlewares/authMiddleware.js')
 const { oauth2Client } = require('../config/oauthConfig.js')
 const { google } = require('googleapis')
 
-const googleAuth = async (req, res) => {
+const oauthController = async (req, res) => {
   const { code } = req.query
   const { tokens } = await oauth2Client.getToken(code)
   oauth2Client.setCredentials(tokens)
@@ -43,4 +43,4 @@ const googleAuth = async (req, res) => {
   res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}`)
 }
 
-module.exports = { googleAuth }
+module.exports = { oauthController }
