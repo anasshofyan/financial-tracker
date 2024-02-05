@@ -38,11 +38,14 @@ app.use(logMiddleware)
 app.use(responseLogMiddleware)
 
 // Use Routes
+const oauthRouter = require('./routes/oauthRoutes')
 const userRouter = require('./routes/userRoutes')
 const categoryRouter = require('./routes/categoryRoutes')
 const transactionRouter = require('./routes/transactionRoutes')
 const { sendResponse } = require('./utils/response')
 
+app.use(express.json())
+app.use('/auth', oauthRouter)
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/category', categoryRouter)
 app.use('/api/v1/transactions', transactionRouter)
