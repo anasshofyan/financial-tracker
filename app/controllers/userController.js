@@ -59,7 +59,7 @@ const update = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       id,
       { username, role, email, password: hashedPassword },
-      { new: true }
+      { new: true },
     )
     sendResponse(res, true, 'Update user success', 200, user)
   } catch (err) {
@@ -90,12 +90,12 @@ const login = async (req, res) => {
     })
 
     if (!user) {
-      return sendResponse(res, false, 'Invalid credentials', 401)
+      return sendResponse(res, false, 'Data user belum terdaftar, silahkan daftar dulu!', 401)
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password)
     if (!isPasswordCorrect) {
-      return sendResponse(res, false, 'Invalid credentials', 401)
+      return sendResponse(res, false, 'Input/password salah!', 401)
     }
 
     const token = generateToken(user)
