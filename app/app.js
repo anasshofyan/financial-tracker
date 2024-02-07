@@ -3,6 +3,7 @@ const express = require('express')
 const mongoosee = require('mongoose')
 const bodyParser = require('body-parser')
 const dotenv = require('dotenv')
+const cors = require('cors')
 dotenv.config()
 
 const app = express()
@@ -31,6 +32,13 @@ const responseLogMiddleware = (req, res, next) => {
   })
   next()
 }
+
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // Atur origin sesuai dengan alamat localhost Anda
+    credentials: true, // Atur credentials jika diperlukan
+  }),
+)
 
 // Use Middlewares
 app.use(bodyParser.json())
