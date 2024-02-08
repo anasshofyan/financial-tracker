@@ -35,7 +35,7 @@ const responseLogMiddleware = (req, res, next) => {
 
 app.use(
   cors({
-    origin: 'http://localhost:3000', // Atur origin sesuai dengan alamat localhost Anda
+    origin: 'http://localhost:5173', // Atur origin sesuai dengan alamat localhost Anda
     credentials: true, // Atur credentials jika diperlukan
   }),
 )
