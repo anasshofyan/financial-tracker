@@ -6,6 +6,10 @@ const { generateToken } = require('../middlewares/authMiddleware.js')
 const register = async (req, res) => {
   const { username, name, email, password } = req.body
 
+  if (!username || !name || !email || !password) {
+    return sendResponse(res, false, 'Semua field tidak boleh kosong!', 400)
+  }
+
   try {
     const existingUser = await User.findOne({ username })
     if (existingUser) {
@@ -83,6 +87,10 @@ const deleteUser = async (req, res) => {
 
 const login = async (req, res) => {
   const { input, password } = req.body
+
+  if (!input || !password) {
+    return sendResponse(res, false, 'Input/password tidak boleh kosong!', 400)
+  }
 
   try {
     const user = await User.findOne({
