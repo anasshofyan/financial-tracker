@@ -30,7 +30,7 @@ const getList = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
 
-    const categories = await Category.find({ createdBy: loggedInUserId })
+    const categories = await Category.find({ createdBy: loggedInUserId }).sort({ createdAt: -1 })
 
     sendResponse(res, true, 'Get list category success', 200, categories)
   } catch (err) {
