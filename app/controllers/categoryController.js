@@ -2,13 +2,13 @@ const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 
 const create = async (req, res) => {
-  const { icon, name, type } = req.body
+  const { emoji, name, type } = req.body
 
   const loggedInUserId = req.decoded.user.id
 
   try {
     const newCategory = new Category({
-      icon,
+      emoji,
       name,
       type,
       createdBy: loggedInUserId,
@@ -50,7 +50,7 @@ const getDetail = async (req, res) => {
         res,
         false,
         'Category not found or you do not have permission to access',
-        404
+        404,
       )
     }
 
@@ -62,14 +62,14 @@ const getDetail = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
-  const { icon, name, type } = req.body
+  const { emoji, name, type } = req.body
 
   try {
     const loggedInUserId = req.decoded.user.id
     const category = await Category.findOneAndUpdate(
       { _id: id, createdBy: loggedInUserId },
-      { icon, name, type },
-      { new: true }
+      { emoji, name, type },
+      { new: true },
     )
 
     if (!category) {
@@ -77,7 +77,7 @@ const update = async (req, res) => {
         res,
         false,
         'Category not found or you do not have permission to update',
-        404
+        404,
       )
     }
 

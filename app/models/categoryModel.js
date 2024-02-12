@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const categorySchema = new mongoose.Schema({
-  icon: {
+  emoji: {
     type: String,
   },
   name: {
