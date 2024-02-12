@@ -19,6 +19,11 @@ const categorySchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now,
+  },
 })
 
 const Category = mongoose.model('Category', categorySchema)
