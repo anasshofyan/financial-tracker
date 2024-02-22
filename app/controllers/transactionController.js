@@ -134,15 +134,35 @@ const getDetail = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
-  const { amount, description, categoryId, type } = req.body
+  const { amount, description, categoryId, date } = req.body
+
+  const loggedInUserId = req.decoded.user.id
 
   try {
-    const transaction = await Transaction.findByIdAndUpdate(
-      id,
-      { amount, description, categoryId, type },
-      { new: true },
-    )
-    sendResponse(res, true, 'Update transaction success', 200, transaction)
+    const category = await Category.findById(categoryId)
+
+    if (!category) {
+      return sendResponse(res, false, 'Category Not Found', 400, {})
+    }
+
+    const type = category.type
+
+    const updatedTransaction = {
+      amount,
+      description,
+      category: categoryId,
+      date,
+      type,
+      createdBy: loggedInUserId,
+    }
+
+    const updated = await Transaction.findByIdAndUpdate(id, updatedTransaction, { new: true })
+
+    if (!updated) {
+      return sendResponse(res, false, 'Transaction not found', 404)
+    }
+
+    sendResponse(res, true, 'Transaction updated successfully', 200, updated)
   } catch (err) {
     if (err.name === 'ValidationError') {
       sendResponse(res, false, 'Validation failed', 400, err.errors)
