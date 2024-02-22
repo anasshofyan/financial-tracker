@@ -48,7 +48,12 @@ const getList = async (req, res) => {
     }
 
     if (startDate && endDate) {
-      dateFilter.date = { $gte: startDate, $lte: endDate }
+      // Konversi string startDate dan endDate menjadi objek Date
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+
+      // Perhatikan bahwa kita menggunakan $gte (greater than or equal) dan $lte (less than or equal)
+      dateFilter.date = { $gte: start, $lte: end }
     }
 
     const transactions = await Transaction.find(dateFilter).populate({
@@ -56,12 +61,24 @@ const getList = async (req, res) => {
       model: 'Category',
     })
 
-    // Objek untuk menyimpan transaksi yang dikelompokkan berdasarkan tanggal
-    const groupedTransactions = {}
-
     // Hitung total pendapatan, total pengeluaran, dan sisa saldo
     let totalIncome = 0
     let totalExpense = 0
+
+    transactions.forEach((transaction) => {
+      // Hitung total pendapatan dan pengeluaran
+      if (transaction.type === 'income') {
+        totalIncome += transaction.amount
+      } else if (transaction.type === 'expense') {
+        totalExpense += transaction.amount
+      }
+    })
+
+    // Hitung sisa saldo
+    const remainingBalance = totalIncome - totalExpense
+
+    // Objek untuk menyimpan transaksi yang dikelompokkan berdasarkan tanggal
+    let groupedTransactions = {}
 
     transactions.forEach((transaction) => {
       // Menggunakan tanggal transaksi sebagai kunci untuk mengelompokkan transaksi
@@ -73,17 +90,7 @@ const getList = async (req, res) => {
         ...transaction.toObject(),
         date: formatDate(transaction.date), // Format ulang tanggal di dalam setiap transaksi
       })
-
-      // Hitung total pendapatan dan pengeluaran
-      if (transaction.type === 'income') {
-        totalIncome += transaction.amount
-      } else if (transaction.type === 'expense') {
-        totalExpense += transaction.amount
-      }
     })
-
-    // Hitung sisa saldo
-    const remainingBalance = totalIncome - totalExpense
 
     // Konversi objek groupedTransactions menjadi array dengan tambahan field date
     const responseData = Object.entries(groupedTransactions).map(([date, transactions]) => ({
