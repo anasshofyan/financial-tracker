@@ -98,7 +98,7 @@ const deleteCategory = async (req, res) => {
 
   try {
     await Category.findByIdAndDelete({ _id: id, createdBy: loggedInUserId })
-    await Transaction.deleteMany({ categoryId: id })
+    await Transaction.deleteMany({ category: id })
 
     sendResponse(res, true, 'Category deleted successfully', 200)
   } catch (err) {
