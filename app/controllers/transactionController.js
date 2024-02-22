@@ -41,8 +41,14 @@ const create = async (req, res) => {
 const getList = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
+    const { startDate, endDate } = req.query
 
-    const transactions = await Transaction.find({ createdBy: loggedInUserId }).populate({
+    const dateFilter = {
+      createdBy: loggedInUserId,
+      date: { $gte: startDate, $lte: endDate },
+    }
+
+    const transactions = await Transaction.find(dateFilter).populate({
       path: 'category',
       model: 'Category',
     })
