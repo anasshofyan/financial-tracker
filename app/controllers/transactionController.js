@@ -45,7 +45,10 @@ const getList = async (req, res) => {
 
     const dateFilter = {
       createdBy: loggedInUserId,
-      date: { $gte: startDate, $lte: endDate },
+    }
+
+    if (startDate && endDate) {
+      dateFilter.date = { $gte: startDate, $lte: endDate }
     }
 
     const transactions = await Transaction.find(dateFilter).populate({
