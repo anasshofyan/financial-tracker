@@ -1,4 +1,5 @@
 const Category = require('../models/categoryModel')
+const Transaction = require('../models/transactionModel.js')
 const { sendResponse } = require('../utils/response.js')
 
 const create = async (req, res) => {
@@ -97,6 +98,8 @@ const deleteCategory = async (req, res) => {
 
   try {
     await Category.findByIdAndDelete({ _id: id, createdBy: loggedInUserId })
+    await Transaction.deleteMany({ categoryId: id })
+
     sendResponse(res, true, 'Category deleted successfully', 200)
   } catch (err) {
     sendResponse(res, false, 'Failed to delete category', 500)
