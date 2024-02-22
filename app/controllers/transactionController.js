@@ -98,6 +98,8 @@ const getList = async (req, res) => {
       transactions,
     }))
 
+    responseData.sort((a, b) => new Date(b.date) - new Date(a.date))
+
     sendResponse(res, true, 'Get list transaction success', 200, {
       listGroup: responseData,
       totalIncome,
