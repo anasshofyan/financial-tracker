@@ -237,26 +237,48 @@ const getVisualizationData = async (req, res) => {
     sendResponse(res, false, 'Failed to get visualization data', 500)
   }
 }
-function formatDate2(date) {
-  const monthNames = [
-    'Januari',
-    'Februari',
-    'Maret',
-    'April',
-    'Mei',
-    'Juni',
-    'Juli',
-    'Agustus',
-    'September',
-    'Oktober',
-    'November',
-    'Desember',
-  ]
+const getPieChartData = async (req, res) => {
+  try {
+    const { month, year, type } = req.params
+    const loggedInUserId = req.decoded.user.id
 
-  const month = monthNames[date.getMonth()]
-  const year = date.getFullYear()
+    const startDate = new Date(year, month - 1, 1) // Menggunakan month - 1 karena bulan dimulai dari 0
+    const endDate = new Date(year, month, 0)
 
-  return `${month} ${year}`
+    let transactionFilter = {
+      createdBy: loggedInUserId,
+      date: { $gte: startDate, $lte: endDate },
+    }
+
+    if (type !== 'all') {
+      transactionFilter.type = type
+    }
+
+    const transactions = await Transaction.find(transactionFilter).populate('category')
+
+    const pieChartData = transactions.map((transaction) => ({
+      monthYear: `${transaction.date.toLocaleString('default', { month: 'long' })} ${transaction.date.getFullYear()}`,
+      category: transaction.category.name,
+      totalAmount: transaction.amount,
+      type: transaction.type,
+    }))
+
+    sendResponse(res, true, 'Get visualization data success', 200, {
+      pieChartData,
+    })
+  } catch (err) {
+    console.error('Failed to get pie chart data:', err)
+    sendResponse(res, false, 'Failed to get pie chart data', 500)
+    res.status(500).json({ message: 'Failed to get pie chart data' })
+  }
 }
 
-module.exports = { create, getList, getDetail, update, deleteTransaction, getVisualizationData }
+module.exports = {
+  create,
+  getList,
+  getDetail,
+  update,
+  deleteTransaction,
+  getVisualizationData,
+  getPieChartData,
+}
