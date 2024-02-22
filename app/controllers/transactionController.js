@@ -115,6 +115,48 @@ const getList = async (req, res) => {
   }
 }
 
+const getMonthlySummary = async (req, res) => {
+  try {
+    const loggedInUserId = req.decoded.user.id
+    const { month, year } = req.query
+
+    const startOfMonth = new Date(year, month - 1, 1)
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+
+    const transactions = await Transaction.find({
+      createdBy: loggedInUserId,
+      date: { $gte: startOfMonth, $lte: endOfMonth },
+    })
+
+    let monthlySummary = {}
+
+    transactions.forEach((transaction) => {
+      const formattedDate = formatDate(transaction.date, 'yyyy-MM-dd')
+      if (!monthlySummary[formattedDate]) {
+        monthlySummary[formattedDate] = {
+          totalIncome: 0,
+          totalExpense: 0,
+        }
+      }
+      if (transaction.type === 'income') {
+        monthlySummary[formattedDate].totalIncome += transaction.amount
+      } else if (transaction.type === 'expense') {
+        monthlySummary[formattedDate].totalExpense += transaction.amount
+      }
+    })
+
+    // Convert the object into an array of objects
+    const responseData = Object.entries(monthlySummary).map(([date, summary]) => ({
+      date,
+      ...summary,
+    }))
+
+    sendResponse(res, true, 'Get monthly summary success', 200, responseData)
+  } catch (err) {
+    sendResponse(res, false, 'Failed to get monthly summary', 500)
+  }
+}
+
 const getDetail = async (req, res) => {
   const { id } = req.params
   const loggedInUserId = req.decoded.user.id
@@ -188,4 +230,4 @@ const deleteTransaction = async (req, res) => {
   }
 }
 
-module.exports = { create, getList, getDetail, update, deleteTransaction }
+module.exports = { create, getList, getDetail, update, deleteTransaction, getMonthlySummary }
