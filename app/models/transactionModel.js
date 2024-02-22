@@ -24,6 +24,10 @@ const transactionSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
   date: {
     type: Date,
     default: Date.now,

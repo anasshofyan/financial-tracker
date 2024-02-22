@@ -101,7 +101,7 @@ const getList = async (req, res) => {
     responseData.sort((a, b) => new Date(b.date) - new Date(a.date))
 
     Object.values(groupedTransactions).forEach((transactions) => {
-      transactions.sort((a, b) => new Date(a.date) - new Date(b.date))
+      transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     })
 
     sendResponse(res, true, 'Get list transaction success', 200, {
