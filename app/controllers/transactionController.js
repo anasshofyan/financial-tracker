@@ -90,10 +90,9 @@ const getList = async (req, res) => {
         ...transaction.toObject(),
         date: formatDate(transaction.date), // Format ulang tanggal di dalam setiap transaksi
       })
+      // Setelah menambahkan transaksi baru, sort array berdasarkan tanggal transaksi yang terbaru
+      groupedTransactions[transactionDate].sort((a, b) => new Date(b.date) - new Date(a.date))
     })
-
-    // Setelah menambahkan transaksi baru, sort array berdasarkan tanggal transaksi yang terbaru
-    groupedTransactions[transactionDate].sort((a, b) => new Date(b.date) - new Date(a.date))
 
     // Konversi objek groupedTransactions menjadi array dengan tambahan field date
     const responseData = Object.entries(groupedTransactions)
