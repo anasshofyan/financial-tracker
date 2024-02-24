@@ -93,10 +93,12 @@ const getList = async (req, res) => {
     })
 
     // Konversi objek groupedTransactions menjadi array dengan tambahan field date
-    const responseData = Object.entries(groupedTransactions).map(([date, transactions]) => ({
-      date,
-      transactions,
-    }))
+    const responseData = Object.entries(groupedTransactions)
+      .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)) // Sorting descending berdasarkan tanggal
+      .map(([date, transactions]) => ({
+        date,
+        transactions,
+      }))
 
     sendResponse(res, true, 'Get list transaction success', 200, {
       listGroup: responseData,
