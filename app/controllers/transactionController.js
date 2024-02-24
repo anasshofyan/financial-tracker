@@ -92,6 +92,9 @@ const getList = async (req, res) => {
       })
     })
 
+    // Setelah menambahkan transaksi baru, sort array berdasarkan tanggal transaksi yang terbaru
+    groupedTransactions[transactionDate].sort((a, b) => new Date(b.date) - new Date(a.date))
+
     // Konversi objek groupedTransactions menjadi array dengan tambahan field date
     const responseData = Object.entries(groupedTransactions)
       .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)) // Sorting descending berdasarkan tanggal
