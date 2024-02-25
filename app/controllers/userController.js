@@ -52,6 +52,16 @@ const getList = async (req, res) => {
   }
 }
 
+const getMe = async (req, res) => {
+  try {
+    const loggedInUserId = req.decoded.user.id
+    const user = await User.findById(loggedInUserId).select('-password -role')
+    sendResponse(res, true, 'Get user success', 200, user)
+  } catch (err) {
+    sendResponse(res, false, 'Failed to get user', 500)
+  }
+}
+
 const update = async (req, res) => {
   const { id } = req.params
   const { username, role, email, password } = req.body
@@ -120,4 +130,4 @@ const login = async (req, res) => {
   }
 }
 
-module.exports = { register, getList, update, deleteUser, login }
+module.exports = { register, getList, update, deleteUser, login, getMe }

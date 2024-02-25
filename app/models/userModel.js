@@ -5,7 +5,7 @@ const userSchema = new Schema(
   {
     username: { type: String },
     name: { type: String, minlength: 3 },
-    picture: { type: String },
+    emoji: { type: String, default: '😎' },
     email: {
       type: String,
       required: [true, 'Email is required!'],
