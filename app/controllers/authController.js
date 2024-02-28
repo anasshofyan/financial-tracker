@@ -32,15 +32,25 @@ const register = async (req, res) => {
 
     const savedUser = await newUser.save()
 
-    await sendVerificationEmail(email, token, name)
+    const verificationResult = await sendVerificationEmail(email, token, name)
 
-    sendResponse(res, true, 'User berhasil dibuat!', 201, {
-      user: {
-        username: savedUser.username,
-        name: savedUser.name,
-        email: savedUser.email,
+    if (!verificationResult.success) {
+      return sendResponse(res, false, 'Gagal mengirim email verifikasi!', 500)
+    }
+
+    sendResponse(
+      res,
+      true,
+      'User berhasil dibuat! Email verifikasi telah dikirim ke ' + email,
+      201,
+      {
+        user: {
+          username: savedUser.username,
+          name: savedUser.name,
+          email: savedUser.email,
+        },
       },
-    })
+    )
   } catch (err) {
     if (err.name === 'ValidationError') {
       sendResponse(res, false, 'Gagal nih, cek lagi deh!', 400, err.errors)
