@@ -110,7 +110,7 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword
     await user.save()
 
-    sendResponse(res, true, 'Password berhasil direset!', 200)
+    sendResponse(res, true, ' Password berhasil direset!', 200)
   } catch (err) {
     sendResponse(res, false, 'Gagal mereset password!', 500)
   }
@@ -120,7 +120,6 @@ const verifyEmail = async (req, res) => {
   const { token } = req.query
 
   try {
-    console.log('token', token)
     const user = await User.findOne({ verificationToken: token })
 
     console.log('user', user)
@@ -133,7 +132,7 @@ const verifyEmail = async (req, res) => {
     user.verificationToken = undefined
     await user.save()
 
-    sendResponse(res, true, 'Email berhasil diverifikasi!', 200, {
+    sendResponse(res, true, 'Email berhasil diverifikasi bro!', 200, {
       user: {
         username: user.username,
         name: user.name,
@@ -142,8 +141,35 @@ const verifyEmail = async (req, res) => {
       },
     })
   } catch (err) {
-    sendResponse(res, false, 'Gagal verifikasi email!', 500)
+    sendResponse(res, false, 'Gagal verifikasi email bro!', 500)
   }
 }
 
-module.exports = { register, login, resetPassword, verifyEmail }
+const resendVerificationEmail = async (req, res) => {
+  const { email } = req.body
+
+  try {
+    if (!email) {
+      return sendResponse(res, false, 'Email belum diisi nih!', 400)
+    }
+
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return sendResponse(res, false, 'Email belum terdaftar nih!', 404)
+    }
+
+    const newToken = generateToken(user.username, user.email)
+
+    user.verificationToken = newToken
+    await user.save()
+
+    await sendVerificationEmail(email, newToken, user.name)
+
+    sendResponse(res, true, `Email verifikasi berhasil dikirim ulang ke ${email}!`, 200)
+  } catch (err) {
+    sendResponse(res, false, 'Gagal mengirim ulang email verifikasi!', 500)
+  }
+}
+
+module.exports = { register, login, resetPassword, verifyEmail, resendVerificationEmail }
