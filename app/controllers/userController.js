@@ -130,4 +130,26 @@ const login = async (req, res) => {
   }
 }
 
-module.exports = { register, getList, update, deleteUser, login, getMe }
+const resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body
+
+  try {
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return sendResponse(res, false, 'Email tidak terdaftar!', 404)
+    }
+
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(newPassword, salt)
+
+    user.password = hashedPassword
+    await user.save()
+
+    sendResponse(res, true, 'Password reset berhasil!', 200)
+  } catch (err) {
+    sendResponse(res, false, 'Gagal mereset password!', 500)
+  }
+}
+
+module.exports = { register, getList, update, deleteUser, login, getMe, resetPassword }
