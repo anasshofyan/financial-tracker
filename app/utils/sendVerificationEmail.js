@@ -12,7 +12,7 @@ const sendVerificationEmail = async (email, token, name) => {
     },
   })
 
-  const verificationLink = `${process.env.REACT_BASE_URL}?token=${token}`
+  const verificationLink = `${process.env.REACT_BASE_URL}=${token}`
   const htmlContent = createEmailContent(name, verificationLink)
 
   const mailOptions = {
