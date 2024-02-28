@@ -19,6 +19,8 @@ const userSchema = new Schema(
     googleId: { type: String },
     googleAccessToken: { type: String },
     googleRefreshToken: { type: String },
+    isVerified: { type: Boolean, default: false }, // Kolom baru untuk status verifikasi email
+    verificationToken: { type: String }, // Kolom baru untuk token verifikasi email
   },
   {
     timestamps: true,
