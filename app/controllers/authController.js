@@ -79,7 +79,12 @@ const login = async (req, res) => {
 
     sendResponse(res, true, 'Login successfully', 200, {
       token,
-      user: user,
+      user: {
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        isVerified: user.isVerified,
+      },
     })
   } catch (err) {
     if (err.name === 'ValidationError') {
@@ -130,6 +135,7 @@ const verifyEmail = async (req, res) => {
 
     sendResponse(res, true, 'Email berhasil diverifikasi!', 200, {
       user: {
+        username: user.username,
         name: user.name,
         email: user.email,
         isVerified: user.isVerified,
