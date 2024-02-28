@@ -71,6 +71,10 @@ const login = async (req, res) => {
       return sendResponse(res, false, 'Input/password salah!', 401)
     }
 
+    if (!user.isVerified) {
+      return sendResponse(res, false, 'Email belum diverifikasi!', 401)
+    }
+
     const token = generateToken(user)
 
     sendResponse(res, true, 'Login successfully', 200, {
@@ -120,11 +124,17 @@ const verifyEmail = async (req, res) => {
       return sendResponse(res, false, 'Token verifikasi tidak valid!', 400)
     }
 
-    // user.isVerified = true
-    // user.verificationToken = undefined
-    // await user.save()
+    user.isVerified = true
+    user.verificationToken = undefined
+    await user.save()
 
-    sendResponse(res, true, 'Email berhasil diverifikasi!', 200)
+    sendResponse(res, true, 'Email berhasil diverifikasi!', 200, {
+      user: {
+        name: user.name,
+        email: user.email,
+        isVerified: user.isVerified,
+      },
+    })
   } catch (err) {
     sendResponse(res, false, 'Gagal verifikasi email!', 500)
   }
