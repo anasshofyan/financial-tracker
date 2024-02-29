@@ -13,7 +13,7 @@ const sendEmail = async (email, subject, htmlContent) => {
   })
 
   const mailOptions = {
-    from: 'Dompet Cerdas',
+    from: process.env.EMAIL_SENDER,
     to: email,
     subject,
     html: htmlContent,
