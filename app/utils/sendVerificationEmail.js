@@ -30,7 +30,7 @@ const sendEmail = async (email, subject, htmlContent) => {
 }
 
 const sendResetPasswordEmail = async (email, token, name) => {
-  const resetPasswordLink = `${process.env.CLIENT_URL}/auth/reset-password/token=${token}`
+  const resetPasswordLink = `${process.env.CLIENT_URL}/auth/reset-password/${token}`
   const htmlContent = createEmailContent(name, 'Reset Password', resetPasswordLink, 'reset')
   return await sendEmail(email, 'Reset Password', htmlContent)
 }
