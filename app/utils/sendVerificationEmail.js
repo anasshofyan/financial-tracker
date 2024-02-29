@@ -36,7 +36,7 @@ const sendResetPasswordEmail = async (email, token, name) => {
 }
 
 const sendVerificationEmail = async (email, token, name) => {
-  const verificationLink = `${process.env.CLIENT_URL}/auth/verify-email/token=${token}`
+  const verificationLink = `${process.env.CLIENT_URL}/auth/verify-email/${token}`
   const htmlContent = createEmailContent(name, 'Verifikasi Email', verificationLink, 'verify')
   return await sendEmail(email, 'Verifikasi Email', htmlContent)
 }
