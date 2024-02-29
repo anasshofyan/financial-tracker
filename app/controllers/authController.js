@@ -1,8 +1,12 @@
 const User = require('../models/userModel.js')
 const bcrypt = require('bcryptjs')
+const crypto = require('crypto')
 const { sendResponse } = require('../utils/response.js')
 const { generateToken } = require('../middlewares/authMiddleware.js')
-const sendVerificationEmail = require('../utils/sendVerificationEmail.js')
+const {
+  sendVerificationEmail,
+  sendResetPasswordEmail,
+} = require('../utils/sendVerificationEmail.js')
 
 const register = async (req, res) => {
   const { username, name, email, password } = req.body
@@ -59,7 +63,6 @@ const register = async (req, res) => {
     }
   }
 }
-
 const login = async (req, res) => {
   const { input, password } = req.body
 
@@ -104,23 +107,65 @@ const login = async (req, res) => {
   }
 }
 
-const resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body
+const requestResetPassword = async (req, res) => {
+  const { email } = req.body
 
   try {
+    if (!email) {
+      return sendResponse(res, false, 'Email belum diisi nih!', 400)
+    }
+
     const user = await User.findOne({ email })
 
     if (!user) {
       return sendResponse(res, false, 'Email belum terdaftar nih!', 404)
     }
 
+    const resetToken = crypto.randomBytes(20).toString('hex')
+    user.resetPasswordToken = resetToken
+    user.resetPasswordExpires = Date.now() + 3600000 // 1 hour
+    await user.save()
+
+    await sendResetPasswordEmail(email, resetToken, user.name)
+
+    sendResponse(res, true, 'Email reset password berhasil dikirim ke ' + user.email, 200)
+  } catch (err) {
+    console.log('err', err)
+    sendResponse(res, false, 'Gagal mengirim email reset password!', 500)
+  }
+}
+
+const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body
+
+  try {
+    if (!token || !newPassword) {
+      return sendResponse(
+        res,
+        false,
+        'Token reset password atau password baru belum diisi nih!',
+        400,
+      )
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return sendResponse(res, false, 'Token reset password nggak valid nih!', 400)
+    }
+
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(newPassword, salt)
 
     user.password = hashedPassword
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
     await user.save()
 
-    sendResponse(res, true, ' Password berhasil direset!', 200)
+    sendResponse(res, true, 'Password berhasil direset!', 200)
   } catch (err) {
     sendResponse(res, false, 'Gagal mereset password!', 500)
   }
@@ -174,7 +219,7 @@ const resendVerificationEmail = async (req, res) => {
     user.verificationToken = newToken
     await user.save()
 
-    await sendVerificationEmail(email, newToken, user.name)
+    await sendResetPasswordEmail(email, newToken, user.name)
 
     sendResponse(res, true, `Email verifikasi berhasil dikirim ulang ke ${email}!`, 200)
   } catch (err) {
@@ -182,4 +227,11 @@ const resendVerificationEmail = async (req, res) => {
   }
 }
 
-module.exports = { register, login, resetPassword, verifyEmail, resendVerificationEmail }
+module.exports = {
+  register,
+  login,
+  resetPassword,
+  verifyEmail,
+  resendVerificationEmail,
+  requestResetPassword,
+}

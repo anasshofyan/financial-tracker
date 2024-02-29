@@ -21,6 +21,12 @@ const userSchema = new Schema(
     googleRefreshToken: { type: String },
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
