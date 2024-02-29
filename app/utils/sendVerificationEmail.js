@@ -13,7 +13,7 @@ const sendEmail = async (email, subject, htmlContent) => {
   })
 
   const mailOptions = {
-    from: process.env.EMAIL_SENDER,
+    from: `"💰 Dompet Cerdas" <${process.env.EMAIL_SENDER}>`,
     to: email,
     subject,
     html: htmlContent,
