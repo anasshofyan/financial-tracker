@@ -243,39 +243,59 @@ const getVisualizationData = async (req, res) => {
     sendResponse(res, false, 'Failed to get visualization data', 500)
   }
 }
+
 const getPieChartData = async (req, res) => {
   try {
-    const { month, year, type } = req.params
+    const { startDate, endDate, type } = req.query
     const loggedInUserId = req.decoded.user.id
 
-    const startDate = new Date(year, month - 1, 1) // Menggunakan month - 1 karena bulan dimulai dari 0
-    const endDate = new Date(year, month, 0)
-
-    let transactionFilter = {
+    const dateFilter = {
       createdBy: loggedInUserId,
-      date: { $gte: startDate, $lte: endDate },
     }
 
-    if (type !== 'all') {
-      transactionFilter.type = type
+    if (startDate && endDate) {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      dateFilter.date = { $gte: start, $lte: end }
     }
 
-    const transactions = await Transaction.find(transactionFilter).populate('category')
+    if (type && type !== 'all') {
+      dateFilter.type = type
+    }
 
-    const pieChartData = transactions.map((transaction) => ({
-      monthYear: `${transaction.date.toLocaleString('default', { month: 'long' })} ${transaction.date.getFullYear()}`,
-      category: transaction.category.name,
-      totalAmount: transaction.amount,
-      type: transaction.type,
+    const transactions = await Transaction.find(dateFilter).populate({
+      path: 'category',
+      model: 'Category',
+    })
+
+    // Group transactions by category and sum the amounts
+    const categoryTotals = transactions.reduce((acc, transaction) => {
+      const category = transaction.category.name
+      const amount = transaction.amount
+      const type = transaction.type
+      const monthYear = new Date(transaction.date).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+      })
+      acc[category] = {
+        total: ((acc[category] && acc[category].total) || 0) + amount,
+        type,
+        monthYear,
+      }
+      return acc
+    }, {})
+
+    // Convert categoryTotals object to array of objects
+    const pieChartData = Object.keys(categoryTotals).map((category) => ({
+      category,
+      total: categoryTotals[category].total,
+      type: categoryTotals[category].type,
+      monthYear: categoryTotals[category].monthYear,
     }))
 
-    sendResponse(res, true, 'Get visualization data success', 200, {
-      pieChartData,
-    })
+    sendResponse(res, true, 'Successfully retrieved pie chart data', 200, pieChartData)
   } catch (err) {
-    console.error('Failed to get pie chart data:', err)
-    sendResponse(res, false, 'Failed to get pie chart data', 500)
-    res.status(500).json({ message: 'Failed to get pie chart data' })
+    sendResponse(res, false, 'Failed to get visualization data', 500)
   }
 }
 
