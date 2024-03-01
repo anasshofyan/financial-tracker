@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 const { sendResponse } = require('../utils/response.js')
 const { generateToken } = require('../middlewares/authMiddleware.js')
+const Category = require('../models/categoryModel.js')
 const {
   sendVerificationEmail,
   sendResetPasswordEmail,
@@ -41,6 +42,35 @@ const register = async (req, res) => {
     if (!verificationResult.success) {
       return sendResponse(res, false, 'Gagal mengirim email verifikasi!', 500)
     }
+
+    const defaultCategories = [
+      { emoji: '🍔', name: 'Makan dan Minuman', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🚗', name: 'Transportasi', type: 'expense', createdBy: savedUser._id },
+      { emoji: '💰', name: 'Gaji', type: 'income', createdBy: savedUser._id },
+      { emoji: '💸', name: 'Freelance', type: 'income', createdBy: savedUser._id },
+      { emoji: '🛒', name: 'Belanja', type: 'expense', createdBy: savedUser._id },
+      { emoji: '📱', name: 'Pulsa', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🎮', name: 'Game', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🎫', name: 'Hiburan', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🎁', name: 'Hadiah', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🎓', name: 'Pendidikan', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🏠', name: 'Sewa', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🔌', name: 'Listrik', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🚿', name: 'Air', type: 'expense', createdBy: savedUser._id },
+      { emoji: '📞', name: 'Telepon', type: 'expense', createdBy: savedUser._id },
+      { emoji: '📺', name: 'TV Kabel', type: 'expense', createdBy: savedUser._id },
+      { emoji: '📡', name: 'Internet', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🚑', name: 'Asuransi', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🏥', name: 'Kesehatan', type: 'expense', createdBy: savedUser._id },
+      { emoji: '👕', name: 'Pakaian', type: 'expense', createdBy: savedUser._id },
+      { emoji: '👠', name: 'Sepatu', type: 'expense', createdBy: savedUser._id },
+      { emoji: '👜', name: 'Tas', type: 'expense', createdBy: savedUser._id },
+      { emoji: '🕶', name: 'Kacamata', type: 'expense', createdBy: savedUser._id },
+      { emoji: '💄', name: 'Kosmetik', type: 'expense', createdBy: savedUser._id },
+      { emoji: '📚', name: 'Buku', type: 'expense', createdBy: savedUser._id },
+    ]
+
+    await Category.insertMany(defaultCategories)
 
     sendResponse(
       res,
