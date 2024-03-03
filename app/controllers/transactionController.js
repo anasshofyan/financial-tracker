@@ -140,7 +140,22 @@ const getDetail = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
+  const loggedInUserId = req.decoded.user.id
+
   const { amount, description, categoryId, date } = req.body
+
+  if (!amount || !description || !categoryId || !date) {
+    sendResponse(res, false, 'All fields are required', 400)
+    return
+  }
+  // Get list of categoryIds owned by the user
+  const userCategories = await Category.find({ loggedInUserId }).distinct('_id')
+
+  // Check if categoryId exists and is owned by the user
+  if (!categoryId || !userCategories.includes(categoryId)) {
+    sendResponse(res, false, 'Invalid category ID', 400)
+    return
+  }
 
   try {
     const transaction = await Transaction.findByIdAndUpdate(
