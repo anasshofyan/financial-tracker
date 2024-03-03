@@ -295,6 +295,9 @@ const getPieChartData = async (req, res) => {
       emoji: categoryTotals[category].emoji,
     }))
 
+    // Sort pieChartData by total in descending order
+    pieChartData.sort((a, b) => b.total - a.total)
+
     sendResponse(res, true, 'Successfully retrieved pie chart data', 200, pieChartData)
   } catch (err) {
     sendResponse(res, false, 'Failed to get visualization data', 500)
