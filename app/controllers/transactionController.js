@@ -271,7 +271,6 @@ const getPieChartData = async (req, res) => {
     // Group transactions by category and sum the amounts
     const categoryTotals = transactions.reduce((acc, transaction) => {
       const category = transaction.category.name
-      const emoji = transaction.category.emoji
       const amount = transaction.amount
       const type = transaction.type
       const monthYear = new Date(transaction.date).toLocaleDateString('id-ID', {
@@ -281,8 +280,8 @@ const getPieChartData = async (req, res) => {
       acc[category] = {
         total: ((acc[category] && acc[category].total) || 0) + amount,
         type,
-        emoji,
         monthYear,
+        emoji: transaction.category.emoji,
       }
       return acc
     }, {})
@@ -290,10 +289,10 @@ const getPieChartData = async (req, res) => {
     // Convert categoryTotals object to array of objects
     const pieChartData = Object.keys(categoryTotals).map((category) => ({
       category,
-      emoji,
       total: categoryTotals[category].total,
       type: categoryTotals[category].type,
       monthYear: categoryTotals[category].monthYear,
+      emoji: categoryTotals[category].emoji,
     }))
 
     sendResponse(res, true, 'Successfully retrieved pie chart data', 200, pieChartData)
