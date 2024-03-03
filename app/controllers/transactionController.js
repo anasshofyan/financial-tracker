@@ -145,31 +145,41 @@ const update = async (req, res) => {
   const { amount, description, categoryId, date } = req.body
 
   if (!amount || !description || !categoryId || !date) {
-    sendResponse(res, false, 'All fields are required', 400)
-    return
-  }
-  // Get list of categoryIds owned by the user
-  const userCategories = await Category.find({ loggedInUserId }).distinct('_id')
-
-  // Check if categoryId exists and is owned by the user
-  if (!categoryId || !userCategories.includes(categoryId)) {
-    sendResponse(res, false, 'Invalid category ID', 400)
-    return
+    return sendResponse(res, false, 'All fields are required', 400)
   }
 
   try {
-    const transaction = await Transaction.findByIdAndUpdate(
-      id,
-      { amount, description, categoryId, date },
-      { new: true },
-    )
+    let transaction = await Transaction.findById(id).populate('category')
+
+    if (!transaction) {
+      return sendResponse(res, false, 'Transaction not found', 404)
+    }
+
+    if (transaction.createdBy.toString() !== loggedInUserId.toString()) {
+      return sendResponse(res, false, 'Unauthorized', 401)
+    }
+
+    const category = await Category.findById(categoryId)
+
+    if (!category) {
+      return sendResponse(res, false, 'Category Not Found', 400, {})
+    }
+
+    transaction.amount = amount
+    transaction.description = description
+    transaction.categoryId = categoryId
+    transaction.date = date
+    transaction.type = category.type // Set tipe transaksi sesuai dengan tipe kategori
+    transaction.category = category // Tambahkan informasi kategori ke objek transaksi
+
+    transaction = await transaction.save() // Simpan perubahan dan dapatkan kembali transaksi dengan perubahan
+
     sendResponse(res, true, 'Update transaction success', 200, transaction)
   } catch (err) {
     if (err.name === 'ValidationError') {
-      sendResponse(res, false, 'Validation failed', 400, err.errors)
-    } else {
-      sendResponse(res, false, 'Failed to update transaction', 500)
+      return sendResponse(res, false, 'Validation failed', 400, err.errors)
     }
+    sendResponse(res, false, 'Failed to update transaction', 500)
   }
 }
 
