@@ -19,8 +19,14 @@ const register = async (req, res) => {
   try {
     const existingUser = await User.findOne({ username })
     if (existingUser) {
-      return sendResponse(res, false, 'User sudah ada nih, coba yang lain ya!', 400)
+      return sendResponse(res, false, 'Username sudah ada nih, coba user yang lain ya!', 400)
     }
+
+    const existingEmail = await User.findOne({ email })
+    if (existingEmail) {
+      return sendResponse(res, false, 'Email sudah terdaftar nih, coba email yang lain ya!', 400)
+    }
+
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
@@ -37,11 +43,6 @@ const register = async (req, res) => {
     const savedUser = await newUser.save()
 
     const verificationResult = await sendVerificationEmail(email, token, name)
-
-    if (!verificationResult.success) {
-      await User.findByIdAndDelete(savedUser._id)
-      return sendResponse(res, false, 'Gagal mengirim email verifikasi!', 500)
-    }
 
     const defaultCategories = [
       { emoji: '🍔', name: 'Makan dan Minuman', type: 'expense', createdBy: savedUser._id },
@@ -71,6 +72,12 @@ const register = async (req, res) => {
     ]
 
     await Category.insertMany(defaultCategories)
+
+    if (!verificationResult.success) {
+      await User.findByIdAndDelete(savedUser._id)
+      await Category.deleteMany({ createdBy: savedUser._id })
+      return sendResponse(res, false, 'Gagal mengirim email verifikasi!', 500)
+    }
 
     sendResponse(
       res,
