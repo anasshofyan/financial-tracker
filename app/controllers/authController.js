@@ -127,6 +127,7 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         isVerified: user.isVerified,
+        cycleStartDate: user.cycleStartDate,
       },
     })
   } catch (err) {
