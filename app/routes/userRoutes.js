@@ -8,5 +8,6 @@ router.get('/me', verifyToken, userController.getMe)
 router.put('/:id', verifyToken, userController.update)
 router.delete('/:id', verifyToken, userController.deleteUser)
 router.post('/settings', verifyToken, userController.setting)
+router.get('/settings', verifyToken, userController.getSetting)
 
 module.exports = router

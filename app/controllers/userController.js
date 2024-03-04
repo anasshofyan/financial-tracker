@@ -21,6 +21,16 @@ const getMe = async (req, res) => {
   }
 }
 
+const getSetting = async (req, res) => {
+  const loggedInUserId = req.decoded.user.id
+  try {
+    const user = await User.findById(loggedInUserId).select('cycleStartDate darkMode')
+    sendResponse(res, true, 'Get user setting success', 200, user)
+  } catch (err) {
+    sendResponse(res, false, 'Failed to get user setting', 500)
+  }
+}
+
 const setting = async (req, res) => {
   const loggedInUserId = req.decoded.user.id
   const { cycleStartDate, darkMode } = req.body
@@ -89,4 +99,4 @@ const deleteUser = async (req, res) => {
   }
 }
 
-module.exports = { getList, update, deleteUser, getMe, setting }
+module.exports = { getList, update, deleteUser, getMe, setting, getSetting }
