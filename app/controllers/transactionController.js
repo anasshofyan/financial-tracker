@@ -293,6 +293,17 @@ const getPieChartData = async (req, res) => {
       model: 'Category',
     })
 
+    // Calculate total income, total expense, and remaining balance
+    const totalIncome = transactions
+      .filter((transaction) => transaction.type === 'income')
+      .reduce((acc, transaction) => acc + transaction.amount, 0)
+
+    const totalExpense = transactions
+      .filter((transaction) => transaction.type === 'expense')
+      .reduce((acc, transaction) => acc + transaction.amount, 0)
+
+    const remainingBalance = totalIncome - totalExpense
+
     // Group transactions by category and sum the amounts
     const categoryTotals = transactions.reduce((acc, transaction) => {
       const category = transaction.category.name
@@ -323,7 +334,12 @@ const getPieChartData = async (req, res) => {
     // Sort pieChartData by total in descending order
     pieChartData.sort((a, b) => b.total - a.total)
 
-    sendResponse(res, true, 'Successfully retrieved pie chart data', 200, pieChartData)
+    sendResponse(res, true, 'Successfully retrieved pie chart data', 200, {
+      listGroup: pieChartData,
+      totalIncome,
+      totalExpense,
+      remainingBalance,
+    })
   } catch (err) {
     sendResponse(res, false, 'Failed to get visualization data', 500)
   }

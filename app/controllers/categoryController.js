@@ -19,6 +19,7 @@ const create = async (req, res) => {
 
     sendResponse(res, true, 'Category created successfully', 201, savedCategory)
   } catch (err) {
+    console.log(err)
     if (err.name === 'ValidationError') {
       sendResponse(res, false, 'Validation failed', 400, err.errors)
     } else {
