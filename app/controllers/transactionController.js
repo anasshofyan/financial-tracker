@@ -202,7 +202,7 @@ const calculateRemainingBalance = (totalIncome, totalExpense) => {
   return totalIncome - totalExpense
 }
 
-const getVisualizationData = async (req, res) => {
+const getStackedChartData = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
     const { startDate, endDate } = req.query
@@ -335,6 +335,6 @@ module.exports = {
   getDetail,
   update,
   deleteTransaction,
-  getVisualizationData,
+  getStackedChartData,
   getPieChartData,
 }
