@@ -15,6 +15,8 @@ const userSchema = new Schema(
       type: String,
       minlength: 6,
     },
+    cycleStartDate: { type: String, default: '1' },
+    darkMode: { type: Boolean, default: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     googleId: { type: String },
     googleAccessToken: { type: String },

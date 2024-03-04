@@ -21,6 +21,41 @@ const getMe = async (req, res) => {
   }
 }
 
+const setting = async (req, res) => {
+  const loggedInUserId = req.decoded.user.id
+  const { cycleStartDate, darkMode } = req.body
+  try {
+    let updateFields = {}
+    if (cycleStartDate) {
+      const startDate = parseInt(cycleStartDate, 10)
+      if (isNaN(startDate) || startDate < 1 || startDate > 31) {
+        sendResponse(res, false, 'Siklus Tanggal Awal harus berada antara 1 dan 31!', 400)
+        return
+      }
+      updateFields.cycleStartDate = cycleStartDate
+    }
+    if (darkMode !== undefined) {
+      updateFields.darkMode = darkMode
+    }
+
+    const user = await User.findByIdAndUpdate(loggedInUserId, updateFields, { new: true })
+
+    let successMessage = 'Siklus tanggal awal berhasil disimpan!'
+    if (darkMode !== undefined) {
+      successMessage = 'Pengaturan dark mode berhasil disimpan!'
+    }
+
+    sendResponse(res, true, successMessage, 200, {
+      username: user.username,
+      email: user.email,
+      cycleStartDate: user.cycleStartDate,
+      darkMode: user.darkMode,
+    })
+  } catch (err) {
+    sendResponse(res, false, 'Gagal menyimpan pengaturan!', 500)
+  }
+}
+
 const update = async (req, res) => {
   const { id } = req.params
   const { username, role, email, password } = req.body
@@ -54,4 +89,4 @@ const deleteUser = async (req, res) => {
   }
 }
 
-module.exports = { getList, update, deleteUser, getMe }
+module.exports = { getList, update, deleteUser, getMe, setting }

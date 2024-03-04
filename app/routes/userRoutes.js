@@ -7,5 +7,6 @@ router.get('/', verifyToken, userController.getList)
 router.get('/me', verifyToken, userController.getMe)
 router.put('/:id', verifyToken, userController.update)
 router.delete('/:id', verifyToken, userController.deleteUser)
+router.post('/settings', verifyToken, userController.setting)
 
 module.exports = router
