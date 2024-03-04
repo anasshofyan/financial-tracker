@@ -21,7 +21,6 @@ const register = async (req, res) => {
     if (existingUser) {
       return sendResponse(res, false, 'User sudah ada nih, coba yang lain ya!', 400)
     }
-
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
@@ -40,6 +39,7 @@ const register = async (req, res) => {
     const verificationResult = await sendVerificationEmail(email, token, name)
 
     if (!verificationResult.success) {
+      await User.findByIdAndDelete(savedUser._id)
       return sendResponse(res, false, 'Gagal mengirim email verifikasi!', 500)
     }
 
