@@ -127,7 +127,7 @@ const getPieChartData = async (req, res) => {
         category: transaction.category.name,
         description: transaction.description,
         amount,
-        date: formatDate(transaction.date),
+        date: transaction.date,
       })
       return acc
     }, {})
@@ -143,7 +143,7 @@ const getPieChartData = async (req, res) => {
     }))
 
     pieChartData.forEach((categoryData) => {
-      categoryData.list.sort((a, b) => b.amount - a.amount)
+      categoryData.list.sort((a, b) => b.date - a.date)
     })
 
     // Sort pieChartData by total in descending order
