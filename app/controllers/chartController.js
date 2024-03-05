@@ -111,12 +111,24 @@ const getPieChartData = async (req, res) => {
         year: 'numeric',
         month: 'long',
       })
-      acc[category] = {
-        total: ((acc[category] && acc[category].total) || 0) + amount,
-        type,
-        monthYear,
-        emoji: transaction.category.emoji,
+      if (!acc[category]) {
+        acc[category] = {
+          total: 0,
+          type,
+          monthYear,
+          emoji: transaction.category.emoji,
+          list: [],
+        }
       }
+      acc[category].total += amount
+      acc[category].list.push({
+        id: transaction._id,
+        emoji: transaction.category.emoji,
+        category: transaction.category.name,
+        description: transaction.description,
+        amount,
+        date: formatDate(transaction.date),
+      })
       return acc
     }, {})
 
@@ -127,7 +139,12 @@ const getPieChartData = async (req, res) => {
       type: categoryTotals[category].type,
       monthYear: categoryTotals[category].monthYear,
       emoji: categoryTotals[category].emoji,
+      list: categoryTotals[category].list,
     }))
+
+    pieChartData.forEach((categoryData) => {
+      categoryData.list.sort((a, b) => b.amount - a.amount)
+    })
 
     // Sort pieChartData by total in descending order
     pieChartData.sort((a, b) => b.total - a.total)
