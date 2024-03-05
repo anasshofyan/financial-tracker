@@ -82,13 +82,13 @@ const getList = async (req, res) => {
 
     transactions.forEach((transaction) => {
       // Menggunakan tanggal transaksi sebagai kunci untuk mengelompokkan transaksi
-      const transactionDate = formatDate(transaction.date)
+      const transactionDate = transaction.date
       if (!groupedTransactions[transactionDate]) {
         groupedTransactions[transactionDate] = []
       }
       groupedTransactions[transactionDate].push({
         ...transaction.toObject(),
-        date: formatDate(transaction.date), // Format ulang tanggal di dalam setiap transaksi
+        date: transaction.date, // Format ulang tanggal di dalam setiap transaksi
       })
       // Setelah menambahkan transaksi baru, sort array berdasarkan tanggal transaksi yang terbaru
       groupedTransactions[transactionDate].sort(
