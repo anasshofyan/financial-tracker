@@ -122,7 +122,8 @@ const getPieChartData = async (req, res) => {
       }
       acc[category].total += amount
       acc[category].list.push({
-        id: transaction._id,
+        idTransaction: transaction._id,
+        idCategory: transaction.category._id,
         emoji: transaction.category.emoji,
         category: transaction.category.name,
         description: transaction.description,
