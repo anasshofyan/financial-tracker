@@ -275,7 +275,7 @@ const resendVerificationEmail = async (req, res) => {
     user.verificationToken = newToken
     await user.save()
 
-    await sendResetPasswordEmail(email, newToken, user.name)
+    await sendVerificationEmail(email, newToken, user.name)
 
     sendResponse(
       res,
