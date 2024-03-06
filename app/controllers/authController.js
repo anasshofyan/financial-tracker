@@ -76,7 +76,12 @@ const register = async (req, res) => {
     if (!verificationResult.success) {
       await User.findByIdAndDelete(savedUser._id)
       await Category.deleteMany({ createdBy: savedUser._id })
-      return sendResponse(res, false, 'Gagal mengirim email verifikasi!', 500)
+      return sendResponse(
+        res,
+        false,
+        'Gagal mengirim email verifikasi, silahkan register kembali!',
+        500,
+      )
     }
 
     sendResponse(
@@ -89,6 +94,7 @@ const register = async (req, res) => {
           username: savedUser.username,
           name: savedUser.name,
           email: savedUser.email,
+          isVerified: savedUser.isVerified,
         },
       },
     )
@@ -192,7 +198,12 @@ const resetPassword = async (req, res) => {
     })
 
     if (!user) {
-      return sendResponse(res, false, 'Token reset password nggak valid nih!', 400)
+      return sendResponse(
+        res,
+        false,
+        'Token reset password sudah nggak valid nih, coba kirimkan ulang email pada halaman lupa password!',
+        400,
+      )
     }
 
     const salt = await bcrypt.genSalt(10)
@@ -215,17 +226,20 @@ const verifyEmail = async (req, res) => {
   try {
     const user = await User.findOne({ verificationToken: token })
 
-    console.log('user', user)
-
     if (!user) {
-      return sendResponse(res, false, 'Token verifikasi nggak valid nih!', 400)
+      return sendResponse(
+        res,
+        false,
+        'Token verifikasi sudah nggak valid nih, coba kirim ulang verifikasi!',
+        400,
+      )
     }
 
     user.isVerified = true
     user.verificationToken = undefined
     await user.save()
 
-    sendResponse(res, true, 'Email berhasil diverifikasi bro!', 200, {
+    sendResponse(res, true, 'Uhuy, Email berhasil diverifikasi nih!', 200, {
       user: {
         username: user.username,
         name: user.name,
@@ -252,6 +266,10 @@ const resendVerificationEmail = async (req, res) => {
       return sendResponse(res, false, 'Email belum terdaftar nih!', 404)
     }
 
+    if (user.isVerified) {
+      return sendResponse(res, false, 'Email sudah diverifikasi nih!', 400)
+    }
+
     const newToken = generateToken(user.username, user.email)
 
     user.verificationToken = newToken
@@ -259,7 +277,12 @@ const resendVerificationEmail = async (req, res) => {
 
     await sendResetPasswordEmail(email, newToken, user.name)
 
-    sendResponse(res, true, `Email verifikasi berhasil dikirim ulang ke ${email}!`, 200)
+    sendResponse(
+      res,
+      true,
+      `Email verifikasi berhasil dikirim ulang ke ${email}, silahkan cek inbox kemudian klik verifikasi!`,
+      200,
+    )
   } catch (err) {
     sendResponse(res, false, 'Gagal mengirim ulang email verifikasi!', 500)
   }
