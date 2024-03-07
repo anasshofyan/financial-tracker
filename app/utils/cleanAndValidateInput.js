@@ -1,4 +1,7 @@
 const sanitizeInput = (input) => {
+  if (typeof input !== 'string') {
+    input = String(input)
+  }
   const sanitizedInput = input.replace(/[;'"`<>]/g, '')
 
   return sanitizedInput
