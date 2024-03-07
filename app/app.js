@@ -1,21 +1,29 @@
 const path = require('path')
 const express = require('express')
-const mongoosee = require('mongoose')
+const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const dotenv = require('dotenv')
 const cors = require('cors')
-dotenv.config()
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` })
 
 const app = express()
-const port = process.env.PORT || 5000
+
+let port
+if (process.env.NODE_ENV === 'production') {
+  port = process.env.PORT
+  console.info('Running in production mode on port', process.env.PORT)
+} else {
+  port = process.env.PORT
+  console.info('Running in development mode on port', process.env.PORT)
+}
 
 // MongoDB connection
-mongoosee.set('strictQuery', false)
-mongoosee.connect(process.env.DB_CONNECT, {
+mongoose.set('strictQuery', false)
+mongoose.connect(process.env.DB_CONNECT, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-const db = mongoosee.connection
+const db = mongoose.connection
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('Connected to Database'))
 
