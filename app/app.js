@@ -10,10 +10,10 @@ const app = express()
 
 let port
 if (process.env.NODE_ENV === 'production') {
-  port = process.env.PORT
+  port = process.env.PORT || 5000
   console.info('Running in production mode on port', process.env.PORT)
 } else {
-  port = process.env.PORT
+  port = process.env.PORT || 3000
   console.info('Running in development mode on port', process.env.PORT)
 }
 
