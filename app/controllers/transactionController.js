@@ -5,14 +5,17 @@ const { formatDate } = require('../utils/formatDate.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 
 const create = async (req, res) => {
-  let { amount, description, categoryId, date } = req.body
   const loggedInUserId = req.decoded.user.id
+  let { amount, description, categoryId, date } = req.body
 
   amount = cleanAndValidateInput(amount)
   description = cleanAndValidateInput(description)
-  date = cleanAndValidateInput(date)
 
   try {
+    if (!amount || !description || !categoryId || !date) {
+      return sendResponse(res, false, 'Semua field harus diisi!', 400)
+    }
+
     const category = await Category.findById(categoryId)
 
     if (!category) {
@@ -43,26 +46,18 @@ const create = async (req, res) => {
 }
 
 const getList = async (req, res) => {
-  const loggedInUserId = req.decoded.user.id
-  let { startDate, endDate } = req.query
-
-  startDate = cleanAndValidateInput(startDate)
-  endDate = cleanAndValidateInput(endDate)
-
   try {
-    startDate = cleanAndValidateInput(startDate)
-    endDate = cleanAndValidateInput(endDate)
+    const loggedInUserId = req.decoded.user.id
+    const { startDate, endDate } = req.query
 
     const dateFilter = {
       createdBy: loggedInUserId,
     }
 
     if (startDate && endDate) {
-      // Konversi string startDate dan endDate menjadi objek Date
       const start = new Date(startDate)
       const end = new Date(endDate)
 
-      // Perhatikan bahwa kita menggunakan $gte (greater than or equal) dan $lte (less than or equal)
       dateFilter.date = { $gte: start, $lte: end }
     }
 
@@ -71,12 +66,10 @@ const getList = async (req, res) => {
       model: 'Category',
     })
 
-    // Hitung total pendapatan, total pengeluaran, dan sisa saldo
     let totalIncome = 0
     let totalExpense = 0
 
     transactions.forEach((transaction) => {
-      // Hitung total pendapatan dan pengeluaran
       if (transaction.type === 'income') {
         totalIncome += transaction.amount
       } else if (transaction.type === 'expense') {
@@ -84,31 +77,26 @@ const getList = async (req, res) => {
       }
     })
 
-    // Hitung sisa saldo
     const remainingBalance = totalIncome - totalExpense
 
-    // Objek untuk menyimpan transaksi yang dikelompokkan berdasarkan tanggal
     let groupedTransactions = {}
 
     transactions.forEach((transaction) => {
-      // Menggunakan tanggal transaksi sebagai kunci untuk mengelompokkan transaksi
       const transactionDate = transaction.date
       if (!groupedTransactions[transactionDate]) {
         groupedTransactions[transactionDate] = []
       }
       groupedTransactions[transactionDate].push({
         ...transaction.toObject(),
-        date: transaction.date, // Format ulang tanggal di dalam setiap transaksi
+        date: transaction.date,
       })
-      // Setelah menambahkan transaksi baru, sort array berdasarkan tanggal transaksi yang terbaru
       groupedTransactions[transactionDate].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       )
     })
 
-    // Konversi objek groupedTransactions menjadi array dengan tambahan field date
     const responseData = Object.entries(groupedTransactions)
-      .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)) // Sorting descending berdasarkan tanggal
+      .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA))
       .map(([date, transactions]) => ({
         date,
         transactions,
@@ -132,7 +120,6 @@ const getDetail = async (req, res) => {
   try {
     const transaction = await Transaction.findOne({ _id: id, createdBy: loggedInUserId })
 
-    console.log('transaction', transaction)
     if (!transaction) {
       return sendResponse(
         res,
@@ -151,11 +138,13 @@ const getDetail = async (req, res) => {
 const update = async (req, res) => {
   const { id } = req.params
   const loggedInUserId = req.decoded.user.id
+  let { amount, description, categoryId, date } = req.body
 
-  const { amount, description, categoryId, date } = req.body
+  amount = cleanAndValidateInput(amount)
+  description = cleanAndValidateInput(description)
 
   if (!amount || !description || !categoryId || !date) {
-    return sendResponse(res, false, 'All fields are required', 400)
+    return sendResponse(res, false, 'Semua field harus diisi!', 400)
   }
 
   try {
@@ -179,10 +168,9 @@ const update = async (req, res) => {
     transaction.description = description
     transaction.categoryId = categoryId
     transaction.date = date
-    transaction.type = category.type // Set tipe transaksi sesuai dengan tipe kategori
-    transaction.category = category // Tambahkan informasi kategori ke objek transaksi
-
-    transaction = await transaction.save() // Simpan perubahan dan dapatkan kembali transaksi dengan perubahan
+    transaction.type = category.type
+    transaction.category = category
+    transaction = await transaction.save()
 
     sendResponse(res, true, 'Update transaction success', 200, transaction)
   } catch (err) {
@@ -194,8 +182,13 @@ const update = async (req, res) => {
 }
 
 const deleteTransaction = async (req, res) => {
+  const { id } = req.params
+
+  if (!id) {
+    return sendResponse(res, false, 'Transaction not found', 404)
+  }
+
   try {
-    const { id } = req.params
     const transaction = await Transaction.findByIdAndDelete(id)
     sendResponse(res, true, 'Delete transaction success', 200, transaction)
   } catch (err) {
