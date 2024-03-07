@@ -1,11 +1,16 @@
 const Category = require('../models/categoryModel')
 const Transaction = require('../models/transactionModel.js')
+const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 const { sendResponse } = require('../utils/response.js')
 
 const create = async (req, res) => {
-  const { emoji, name, type } = req.body
+  let { emoji, name, type } = req.body
 
   const loggedInUserId = req.decoded.user.id
+
+  emoji = cleanAndValidateInput(emoji)
+  name = cleanAndValidateInput(name)
+  type = cleanAndValidateInput(type)
 
   try {
     const newCategory = new Category({
@@ -64,7 +69,11 @@ const getDetail = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
-  const { emoji, name, type } = req.body
+  let { emoji, name, type } = req.body
+
+  emoji = cleanAndValidateInput(emoji)
+  name = cleanAndValidateInput(name)
+  type = cleanAndValidateInput(type)
 
   try {
     const loggedInUserId = req.decoded.user.id

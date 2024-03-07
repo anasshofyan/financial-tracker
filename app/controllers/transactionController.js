@@ -2,11 +2,15 @@ const Transaction = require('../models/transactionModel')
 const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 const { formatDate } = require('../utils/formatDate.js')
+const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 
 const create = async (req, res) => {
-  const { amount, description, categoryId, date } = req.body
-
+  let { amount, description, categoryId, date } = req.body
   const loggedInUserId = req.decoded.user.id
+
+  amount = cleanAndValidateInput(amount)
+  description = cleanAndValidateInput(description)
+  date = cleanAndValidateInput(date)
 
   try {
     const category = await Category.findById(categoryId)
@@ -39,9 +43,15 @@ const create = async (req, res) => {
 }
 
 const getList = async (req, res) => {
+  const loggedInUserId = req.decoded.user.id
+  let { startDate, endDate } = req.query
+
+  startDate = cleanAndValidateInput(startDate)
+  endDate = cleanAndValidateInput(endDate)
+
   try {
-    const loggedInUserId = req.decoded.user.id
-    const { startDate, endDate } = req.query
+    startDate = cleanAndValidateInput(startDate)
+    endDate = cleanAndValidateInput(endDate)
 
     const dateFilter = {
       createdBy: loggedInUserId,

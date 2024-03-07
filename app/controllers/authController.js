@@ -8,12 +8,23 @@ const {
   sendVerificationEmail,
   sendResetPasswordEmail,
 } = require('../utils/sendVerificationEmail.js')
+const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 
 const register = async (req, res) => {
-  const { username, name, email, password } = req.body
+  let { username, name, email, password } = req.body
+
+  username = cleanAndValidateInput(username)
+  name = cleanAndValidateInput(name)
+  password = cleanAndValidateInput(password)
+
+  try {
+    email = cleanAndValidateInput(email, 'email')
+  } catch (error) {
+    return sendResponse(res, false, error.message, 400)
+  }
 
   if (!username || !name || !email || !password) {
-    return sendResponse(res, false, 'Jangan ada yang kosong ya!', 400)
+    return sendResponse(res, false, 'Jangan ada field yang kosong ya!', 400)
   }
 
   try {
@@ -79,7 +90,7 @@ const register = async (req, res) => {
       return sendResponse(
         res,
         false,
-        'Gagal mengirim email verifikasi, silahkan register kembali!',
+        'Ups, Gagal mengirim email verifikasi, silahkan register kembali!',
         500,
       )
     }
@@ -100,17 +111,25 @@ const register = async (req, res) => {
     )
   } catch (err) {
     if (err.name === 'ValidationError') {
-      sendResponse(res, false, 'Gagal nih, cek lagi deh!', 400, err.errors)
+      sendResponse(res, false, 'Gagal buat user nih, cek lagi deh!', 400, err.errors)
     } else {
       sendResponse(res, false, 'Gagal buat user, coba lagi ya!', 500)
     }
   }
 }
 const login = async (req, res) => {
-  const { input, password } = req.body
+  let { input, password } = req.body
+
+  input = cleanAndValidateInput(input)
+  password = cleanAndValidateInput(password)
 
   if (!input || !password) {
-    return sendResponse(res, false, 'Jangan lupa isi username/email sama passwordnya ya!', 400)
+    return sendResponse(
+      res,
+      false,
+      'Field username/email sama passwordnya tidak boleh kosong ya!',
+      400,
+    )
   }
 
   try {
@@ -119,7 +138,7 @@ const login = async (req, res) => {
     })
 
     if (!user) {
-      return sendResponse(res, false, 'User belum terdaftar, daftar dulu ya!', 401)
+      return sendResponse(res, false, 'User belum terdaftar nih, coba daftar dulu ya!', 401)
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password)
@@ -133,7 +152,7 @@ const login = async (req, res) => {
 
     const token = generateToken(user)
 
-    sendResponse(res, true, 'Login berhasil!', 200, {
+    sendResponse(res, true, 'Yeay! Login berhasil!', 200, {
       token,
       user: {
         username: user.username,
@@ -152,13 +171,19 @@ const login = async (req, res) => {
 }
 
 const requestResetPassword = async (req, res) => {
-  const { email } = req.body
+  let { email } = req.body
 
   try {
-    if (!email) {
-      return sendResponse(res, false, 'Email belum diisi nih!', 400)
-    }
+    email = cleanAndValidateInput(email, 'email')
+  } catch (error) {
+    return sendResponse(res, false, error.message, 400)
+  }
 
+  if (!email) {
+    return sendResponse(res, false, 'Email belum diisi nih!', 400)
+  }
+
+  try {
     const user = await User.findOne({ email })
 
     if (!user) {
@@ -180,14 +205,16 @@ const requestResetPassword = async (req, res) => {
 }
 
 const resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body
+  let { token, newPassword } = req.body
+
+  newPassword = cleanAndValidateInput(newPassword)
 
   try {
     if (!token || !newPassword) {
       return sendResponse(
         res,
         false,
-        'Token reset password atau password baru belum diisi nih!',
+        'Field token reset password atau password baru belum diisi nih!',
         400,
       )
     }
@@ -201,7 +228,7 @@ const resetPassword = async (req, res) => {
       return sendResponse(
         res,
         false,
-        'Token reset password sudah nggak valid nih, coba kirimkan ulang email pada halaman lupa password!',
+        'Token reset password sudah nggak valid nih, coba kirimkan ulang email pada halaman lupa password ya!',
         400,
       )
     }
@@ -224,6 +251,10 @@ const verifyEmail = async (req, res) => {
   const { token } = req.query
 
   try {
+    if (!token) {
+      return sendResponse(res, false, 'Token verifikasi belum diisi nih!', 400)
+    }
+
     const user = await User.findOne({ verificationToken: token })
 
     if (!user) {
@@ -253,7 +284,13 @@ const verifyEmail = async (req, res) => {
 }
 
 const resendVerificationEmail = async (req, res) => {
-  const { email } = req.body
+  let { email } = req.body
+
+  try {
+    email = cleanAndValidateInput(email, 'email')
+  } catch (error) {
+    return sendResponse(res, false, error.message, 400)
+  }
 
   try {
     if (!email) {

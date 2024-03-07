@@ -2,6 +2,7 @@ const Transaction = require('../models/transactionModel')
 const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 const { formatDate } = require('../utils/formatDate.js')
+const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 
 const formatDate1 = (date, format) => {
   return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
@@ -14,7 +15,10 @@ const calculateRemainingBalance = (totalIncome, totalExpense) => {
 const getStackedChartData = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
-    const { startDate, endDate } = req.query
+    let { startDate, endDate } = req.query
+
+    startDate = cleanAndValidateInput(startDate)
+    endDate = cleanAndValidateInput(endDate)
 
     const dateFilter = {
       createdBy: loggedInUserId,

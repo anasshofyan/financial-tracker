@@ -1,6 +1,7 @@
 const User = require('../models/userModel')
 const bcrypt = require('bcryptjs')
 const { sendResponse } = require('../utils/response.js')
+const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 
 const getList = async (req, res) => {
   try {
@@ -68,7 +69,17 @@ const setting = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params
-  const { username, role, email, password } = req.body
+  let { username, role, email, password } = req.body
+
+  username = cleanAndValidateInput(username)
+  role = cleanAndValidateInput(role)
+  password = cleanAndValidateInput(password)
+  try {
+    email = cleanAndValidateInput(email)
+  } catch (err) {
+    sendResponse(res, false, err.message, 400)
+    return
+  }
 
   try {
     const salt = await bcrypt.genSalt(10)
