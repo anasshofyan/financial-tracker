@@ -140,12 +140,8 @@ const update = async (req, res) => {
   const loggedInUserId = req.decoded.user.id
   let { amount, description, categoryId, date } = req.body
 
-  try {
-    amount = cleanAndValidateInput(amount)
-    description = cleanAndValidateInput(description)
-  } catch (err) {
-    return sendResponse(res, false, err, 400, err.errors)
-  }
+  amount = cleanAndValidateInput(amount)
+  description = cleanAndValidateInput(description)
 
   if (!amount || !description || !categoryId || !date) {
     return sendResponse(res, false, 'Semua field harus diisi!', 400)
