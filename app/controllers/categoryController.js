@@ -126,6 +126,7 @@ const update = async (req, res) => {
     }
 
     const userCategories = await Category.find({ createdBy: loggedInUserId })
+    const isIdvalid = id ? userCategories.some((category) => category._id.toString() === id) : true
     const isParentIdValid = parentId
       ? userCategories.some((category) => category._id.toString() === parentId)
       : true
@@ -134,13 +135,12 @@ const update = async (req, res) => {
       return sendResponse(res, false, 'Wah, parentId nya ngaco nih!', 400)
     }
 
-    const category = await Category.findOneAndUpdate(
-      { _id: id, createdBy: loggedInUserId },
-      { emoji, name, type, parentId },
-      { new: true },
-    )
+    if (!isIdvalid) {
+      return sendResponse(res, false, 'Wah, id nya ngaco nih!', 400)
+    }
 
-    if (!category) {
+    const categoryToUpdate = await Category.findOne({ _id: id, createdBy: loggedInUserId })
+    if (!categoryToUpdate) {
       return sendResponse(
         res,
         false,
@@ -149,7 +149,23 @@ const update = async (req, res) => {
       )
     }
 
-    sendResponse(res, true, 'Uhuy, kategori berhasil di update nih!', 200, category)
+    if (parentId) {
+      const subCategoriesToUpdate = await Category.find({ parentId: id, createdBy: loggedInUserId })
+      await Promise.all(
+        subCategoriesToUpdate.map(async (subCategory) => {
+          subCategory.parentId = null
+          await subCategory.save()
+        }),
+      )
+    }
+
+    categoryToUpdate.emoji = emoji
+    categoryToUpdate.name = name
+    categoryToUpdate.type = type
+    categoryToUpdate.parentId = parentId
+    const updatedCategory = await categoryToUpdate.save()
+
+    sendResponse(res, true, 'Uhuy, kategori berhasil di update nih!', 200, updatedCategory)
   } catch (err) {
     if (err.name === 'ValidationError') {
       sendResponse(res, false, 'Validation failed', 400, err.errors)
