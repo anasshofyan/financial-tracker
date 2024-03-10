@@ -3,23 +3,29 @@ const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 const { formatDate } = require('../utils/formatDate.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
+const Wallet = require('../models/walletModel.js')
 
 const create = async (req, res) => {
   const loggedInUserId = req.decoded.user.id
-  let { amount, description, categoryId, date } = req.body
+  let { amount, description, categoryId, date, walletId } = req.body
 
   amount = cleanAndValidateInput(amount)
   description = cleanAndValidateInput(description)
 
   try {
-    if (!amount || !description || !categoryId || !date) {
+    if (!amount || !description || !categoryId || !date || !walletId) {
       return sendResponse(res, false, 'Semua field harus diisi!', 400)
     }
 
     const category = await Category.findById(categoryId)
+    const wallet = await Wallet.findById(walletId)
 
     if (!category) {
       return sendResponse(res, false, 'Category Not Found', 400, {})
+    }
+
+    if (!wallet) {
+      return sendResponse(res, false, 'Wallet Not Found', 400, {})
     }
 
     const type = category.type
@@ -31,6 +37,7 @@ const create = async (req, res) => {
       date,
       type,
       createdBy: loggedInUserId,
+      walletId,
     })
 
     const savedTransaction = await newTransaction.save()
