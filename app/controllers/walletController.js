@@ -7,22 +7,14 @@ const Category = require('../models/categoryModel.js')
 const createWallet = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
-    const { categoryId } = req.body
     const { name, emoji, balance } = cleanAndValidateInput(req.body)
 
-    if (!name || !emoji || !balance || !categoryId || !idUser) {
+    if (!name || !emoji || !balance || !idUser) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
     }
 
-    const isCategoryExist = await Category.findById(categoryId)
-
-    if (!isCategoryExist) {
-      sendResponse(res, false, 'Category not found', 404)
-      return
-    }
-
-    const wallet = new Wallet({ name, emoji, balance, categoryId, createBy: loggedInUserId })
+    const wallet = new Wallet({ name, emoji, balance, createBy: loggedInUserId })
     await wallet.save()
     sendResponse(res, true, 'Yeay! dompet berhasil dibuat!', 200, wallet)
   } catch (error) {
@@ -61,10 +53,9 @@ const updateWallet = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
     const { id } = req.params
-    const { categoryId } = req.body
     const { name, emoji, balance } = cleanAndValidateInput(req.body)
 
-    if (!name || !emoji || !balance || !categoryId) {
+    if (!name || !emoji || !balance) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
     }

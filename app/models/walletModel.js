@@ -6,7 +6,6 @@ const walletSchema = new Schema(
     emoji: { type: String, default: '💰' },
     name: { type: String, default: 'Dompet Utama', required: true },
     balance: { type: Number, default: 0 },
-    categoryId: { type: Schema.Types.ObjectId, ref: 'Category' },
     createBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   {
