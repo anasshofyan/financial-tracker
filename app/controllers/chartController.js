@@ -3,6 +3,7 @@ const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
 const { formatDate } = require('../utils/formatDate.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
+const { id, ca } = require('date-fns/locale')
 
 const formatDate1 = (date, format) => {
   return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
@@ -106,49 +107,72 @@ const getPieChartData = async (req, res) => {
       model: 'Category',
     })
 
-    // Group transactions by category and sum the amounts
-    const categoryTotals = transactions.reduce((acc, transaction) => {
-      const category = transaction.category.name
-      const amount = transaction.amount
-      const type = transaction.type
-      const monthYear = new Date(transaction.date).toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-      })
-      if (!acc[category]) {
-        acc[category] = {
-          total: 0,
-          type,
+    const categoryTotals = await Promise.all(
+      transactions.map(async (transaction) => {
+        const categoryId = transaction.category._id
+        const categoryName = transaction.category.name
+        const amount = transaction.amount
+        const monthYear = new Date(transaction.date).toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long',
+        })
+
+        const parentCategoryId = transaction.category.parentId || categoryId
+
+        const findParentCategory = await Category.findById(parentCategoryId)
+
+        return {
+          category: parentCategoryId,
+          total: amount,
           monthYear,
-          emoji: transaction.category.emoji,
-          list: [],
+          parentCategory: {
+            id: parentCategoryId,
+            name: findParentCategory ? findParentCategory.name : categoryName,
+            emoji: findParentCategory ? findParentCategory.emoji : transaction.category.emoji,
+            type: findParentCategory ? findParentCategory.type : transaction.category.type,
+          },
+          listChildCategory: [
+            {
+              idTransaction: transaction._id,
+              childCategory: {
+                id: categoryId,
+                name: categoryName,
+                emoji: transaction.category.emoji,
+                type: transaction.category.type,
+                parentId: transaction.category.parentId,
+              },
+              date: transaction.date,
+              description: transaction.description,
+              amount,
+            },
+          ],
         }
+      }),
+    )
+
+    // Merge and reduce the array of objects into a single object
+    const reducedCategoryTotals = categoryTotals.reduce((acc, curr) => {
+      const existing = acc[curr.category]
+      if (existing) {
+        existing.total += curr.total
+        existing.listChildCategory.push(...curr.listChildCategory)
+      } else {
+        acc[curr.category] = curr
       }
-      acc[category].total += amount
-      acc[category].list.push({
-        idTransaction: transaction._id,
-        idCategory: transaction.category._id,
-        emoji: transaction.category.emoji,
-        category: transaction.category.name,
-        description: transaction.description,
-        amount,
-        date: transaction.date,
-      })
       return acc
     }, {})
 
-    // Convert categoryTotals object to array of objects
-    const pieChartData = Object.keys(categoryTotals).map((category) => ({
-      category,
-      total: categoryTotals[category].total,
-      type: categoryTotals[category].type,
-      monthYear: categoryTotals[category].monthYear,
-      emoji: categoryTotals[category].emoji,
-      list: categoryTotals[category].list,
+    // Convert reducedCategoryTotals object to array of objects
+    const pieChartData = Object.values(reducedCategoryTotals).map((categoryData) => ({
+      category: categoryData.category,
+      total: categoryData.total,
+      monthYear: categoryData.monthYear,
+      parentCategory: categoryData.parentCategory,
+      listChildCategory: categoryData.listChildCategory,
     }))
 
     pieChartData.forEach((categoryData) => {
-      categoryData.list.sort((a, b) => b.date - a.date)
+      categoryData.listChildCategory.sort((a, b) => b.date - a.date)
     })
 
     // Sort pieChartData by total in descending order
