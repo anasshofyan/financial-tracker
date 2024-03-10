@@ -24,6 +24,11 @@ const transactionSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  wallet: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Wallet',
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
