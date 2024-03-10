@@ -7,9 +7,15 @@ const Category = require('../models/categoryModel.js')
 const createWallet = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
-    const { name, emoji, balance } = cleanAndValidateInput(req.body)
+    let { name, emoji, balance } = req.body
 
-    if (!name || !emoji || !balance || !idUser) {
+    name = cleanAndValidateInput(name)
+    emoji = cleanAndValidateInput(emoji)
+    balance = cleanAndValidateInput(balance)
+
+    console.log(name, emoji, balance)
+
+    if (!name || !emoji || !balance) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
     }
@@ -18,7 +24,7 @@ const createWallet = async (req, res) => {
     await wallet.save()
     sendResponse(res, true, 'Yeay! dompet berhasil dibuat!', 200, wallet)
   } catch (error) {
-    sendResponse(res, 400, error)
+    sendResponse(res, false, 'Failed to create wallet', 500)
   }
 }
 
@@ -32,10 +38,18 @@ const getWallets = async (req, res) => {
   }
 }
 
-const getTrsnactionByWallet = async (req, res) => {
+const getTransactionByWallet = async (req, res) => {
   try {
-    const loggedInUserId = req.decoded.user.id
     const { id } = req.params
+    const loggedInUserId = req.decoded.user.id
+
+    console.log(id)
+
+    if (!id) {
+      sendResponse(res, false, 'Wallet id is required', 400)
+      return
+    }
+
     const transactions = await Transaction.find({ walletId: id, createdBy: loggedInUserId })
 
     if (!transactions) {
@@ -45,15 +59,20 @@ const getTrsnactionByWallet = async (req, res) => {
 
     sendResponse(res, true, 'Get transaction by wallet success', 200, transactions)
   } catch (error) {
+    console.log(error)
     sendResponse(res, false, 'Failed to get transaction by wallet', 500)
   }
 }
 
 const updateWallet = async (req, res) => {
   try {
-    const loggedInUserId = req.decoded.user.id
     const { id } = req.params
-    const { name, emoji, balance } = cleanAndValidateInput(req.body)
+    const loggedInUserId = req.decoded.user.id
+    let { name, emoji, balance } = req.body
+
+    name = cleanAndValidateInput(name)
+    emoji = cleanAndValidateInput(emoji)
+    balance = cleanAndValidateInput(balance)
 
     if (!name || !emoji || !balance) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
@@ -75,8 +94,8 @@ const updateWallet = async (req, res) => {
     wallet.name = name
     wallet.emoji = emoji
     wallet.balance = balance
-    wallet.categoryId = categoryId
     await wallet.save()
+
     sendResponse(res, true, 'Wallet berhasil diupdate!', 200, wallet)
   } catch (error) {
     sendResponse(res, false, 'Failed to update wallet', 500)
@@ -85,25 +104,17 @@ const updateWallet = async (req, res) => {
 
 const deleteWallet = async (req, res) => {
   try {
-    const loggedInUserId = req.decoded.user.id
     const { id } = req.params
-    const wallet = await Wallet.findById(id)
+    const loggedInUserId = req.decoded.user.id
 
-    if (!wallet) {
-      sendResponse(res, false, 'Wallet not found', 404)
-      return
-    }
+    await Wallet.deleteOne({ _id: id, createBy: loggedInUserId })
+    await Transaction.deleteMany({ walletId: id, createdBy: loggedInUserId })
 
-    if (wallet.createBy.toString() !== loggedInUserId.toString()) {
-      sendResponse(res, false, 'Unauthorized', 401)
-      return
-    }
-
-    await wallet.remove()
-    sendResponse(res, true, 'Wallet berhasil dihapus!', 200, wallet)
+    sendResponse(res, true, 'Wallet berhasil dihapus!', 200, {})
   } catch (error) {
+    console.log(error)
     sendResponse(res, false, 'Failed to delete wallet', 500)
   }
 }
 
-module.exports = { createWallet, getWallets, getTrsnactionByWallet, updateWallet, deleteWallet }
+module.exports = { createWallet, getWallets, getTransactionByWallet, updateWallet, deleteWallet }
