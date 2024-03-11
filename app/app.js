@@ -4,7 +4,7 @@ const mongoosee = require('mongoose')
 const bodyParser = require('body-parser')
 const dotenv = require('dotenv')
 const cors = require('cors')
-dotenv.config({ path: './.env.dev' })
+dotenv.config()
 
 const app = express()
 const port = process.env.PORT || 5000
