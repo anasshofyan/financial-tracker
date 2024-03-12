@@ -8,6 +8,7 @@ const walletSchema = new Schema(
     balance: { type: Number, default: 0 },
     bgWallet: { type: String, default: '#27B427' },
     createBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
