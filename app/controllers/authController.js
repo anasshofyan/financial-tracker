@@ -9,6 +9,7 @@ const {
   sendResetPasswordEmail,
 } = require('../utils/sendVerificationEmail.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
+const Wallet = require('../models/walletModel.js')
 
 const register = async (req, res) => {
   let { username, name, email, password } = req.body
@@ -83,10 +84,12 @@ const register = async (req, res) => {
     ]
 
     await Category.insertMany(defaultCategories)
+    await Wallet.create({ createBy: savedUser._id })
 
     if (!verificationResult.success) {
       await User.findByIdAndDelete(savedUser._id)
       await Category.deleteMany({ createdBy: savedUser._id })
+      await Wallet.deleteOne({ createBy: savedUser._id })
       return sendResponse(
         res,
         false,
