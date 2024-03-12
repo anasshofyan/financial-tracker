@@ -2,12 +2,11 @@ const Wallet = require('../models/walletModel.js')
 const { sendResponse } = require('../utils/response.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 const Transaction = require('../models/transactionModel.js')
-const Category = require('../models/categoryModel.js')
 
 const createWallet = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
-    let { name, emoji, balance } = req.body
+    let { name, emoji, balance, bgWallet } = req.body
 
     name = cleanAndValidateInput(name)
     emoji = cleanAndValidateInput(emoji)
@@ -15,12 +14,12 @@ const createWallet = async (req, res) => {
 
     console.log(name, emoji, balance)
 
-    if (!name || !emoji || !balance) {
+    if (!name || !emoji || !balance || !bgWallet) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
     }
 
-    const wallet = new Wallet({ name, emoji, balance, createBy: loggedInUserId })
+    const wallet = new Wallet({ name, emoji, balance, bgWallet, createBy: loggedInUserId })
     await wallet.save()
     sendResponse(res, true, 'Yeay! dompet berhasil dibuat!', 200, wallet)
   } catch (error) {
@@ -32,9 +31,9 @@ const getWallets = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
     const wallet = await Wallet.find({ createBy: loggedInUserId })
-    sendResponse(res, true, 'Get list wallet success', 200, wallet)
+    sendResponse(res, true, 'Berhasil get list wallet', 200, wallet)
   } catch (error) {
-    sendResponse(res, false, 'Failed to get list wallet', 500)
+    sendResponse(res, false, 'Gagal get list wallet', 500)
   }
 }
 
@@ -42,8 +41,6 @@ const getTransactionByWallet = async (req, res) => {
   try {
     const { id } = req.params
     const loggedInUserId = req.decoded.user.id
-
-    console.log(id)
 
     if (!id) {
       sendResponse(res, false, 'Wallet id is required', 400)
@@ -59,7 +56,6 @@ const getTransactionByWallet = async (req, res) => {
 
     sendResponse(res, true, 'Get transaction by wallet success', 200, transactions)
   } catch (error) {
-    console.log(error)
     sendResponse(res, false, 'Failed to get transaction by wallet', 500)
   }
 }
@@ -68,13 +64,13 @@ const updateWallet = async (req, res) => {
   try {
     const { id } = req.params
     const loggedInUserId = req.decoded.user.id
-    let { name, emoji, balance } = req.body
+    let { name, emoji, balance, bgWallet } = req.body
 
     name = cleanAndValidateInput(name)
     emoji = cleanAndValidateInput(emoji)
     balance = cleanAndValidateInput(balance)
 
-    if (!name || !emoji || !balance) {
+    if (!name || !emoji || !balance || !bgWallet) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
     }
@@ -94,6 +90,7 @@ const updateWallet = async (req, res) => {
     wallet.name = name
     wallet.emoji = emoji
     wallet.balance = balance
+    wallet.bgWallet = bgWallet
     await wallet.save()
 
     sendResponse(res, true, 'Wallet berhasil diupdate!', 200, wallet)
