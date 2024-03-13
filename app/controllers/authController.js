@@ -54,37 +54,23 @@ const register = async (req, res) => {
 
     const savedUser = await newUser.save()
 
+    const wallet = await Wallet.create({ createBy: savedUser._id })
+
+    await User.findByIdAndUpdate(savedUser._id, { selectedWallet: wallet._id })
+
     const verificationResult = await sendVerificationEmail(email, token, name)
 
     const defaultCategories = [
       { emoji: '🍔', name: 'Makan dan Minuman', type: 'expense', createdBy: savedUser._id },
       { emoji: '🚗', name: 'Transportasi', type: 'expense', createdBy: savedUser._id },
       { emoji: '💰', name: 'Gaji', type: 'income', createdBy: savedUser._id },
-      { emoji: '💸', name: 'Freelance', type: 'income', createdBy: savedUser._id },
       { emoji: '🛒', name: 'Belanja', type: 'expense', createdBy: savedUser._id },
-      { emoji: '📱', name: 'Pulsa', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🎮', name: 'Game', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🎫', name: 'Hiburan', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🎁', name: 'Hadiah', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🎓', name: 'Pendidikan', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🏠', name: 'Sewa', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🔌', name: 'Listrik', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🚿', name: 'Air', type: 'expense', createdBy: savedUser._id },
-      { emoji: '📞', name: 'Telepon', type: 'expense', createdBy: savedUser._id },
-      { emoji: '📺', name: 'TV Kabel', type: 'expense', createdBy: savedUser._id },
       { emoji: '📡', name: 'Internet', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🚑', name: 'Asuransi', type: 'expense', createdBy: savedUser._id },
       { emoji: '🏥', name: 'Kesehatan', type: 'expense', createdBy: savedUser._id },
-      { emoji: '👕', name: 'Pakaian', type: 'expense', createdBy: savedUser._id },
-      { emoji: '👠', name: 'Sepatu', type: 'expense', createdBy: savedUser._id },
-      { emoji: '👜', name: 'Tas', type: 'expense', createdBy: savedUser._id },
-      { emoji: '🕶', name: 'Kacamata', type: 'expense', createdBy: savedUser._id },
-      { emoji: '💄', name: 'Kosmetik', type: 'expense', createdBy: savedUser._id },
       { emoji: '📚', name: 'Buku', type: 'expense', createdBy: savedUser._id },
     ]
 
     await Category.insertMany(defaultCategories)
-    await Wallet.create({ createBy: savedUser._id })
 
     if (!verificationResult.success) {
       await User.findByIdAndDelete(savedUser._id)
@@ -163,6 +149,7 @@ const login = async (req, res) => {
         email: user.email,
         isVerified: user.isVerified,
         cycleStartDate: user.cycleStartDate,
+        selectedWallet: user.selectedWallet,
       },
     })
   } catch (err) {
@@ -307,7 +294,12 @@ const resendVerificationEmail = async (req, res) => {
     }
 
     if (user.isVerified) {
-      return sendResponse(res, false, 'Email sudah diverifikasi nih!', 400)
+      return sendResponse(
+        res,
+        false,
+        'Email sudah diverifikasi nih, silahkan login kembali ya!',
+        400,
+      )
     }
 
     const newToken = generateToken(user.username, user.email)
