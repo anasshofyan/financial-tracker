@@ -30,8 +30,8 @@ const createWallet = async (req, res) => {
 const getWallets = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
-    const wallet = await Wallet.find({ createBy: loggedInUserId })
 
+    const wallet = await Wallet.find({ createBy: loggedInUserId })
     wallet.sort((a, b) => b.createdAt - a.createdAt)
 
     sendResponse(res, true, 'Berhasil get list wallet', 200, wallet)
