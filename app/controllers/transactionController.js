@@ -143,33 +143,41 @@ const getDetail = async (req, res) => {
     sendResponse(res, false, 'Failed to get transaction detail', 500)
   }
 }
+const update = async (req, res) => {
+  const transactionId = req.params.id
+  const { amount, description, categoryId, date, walletId } = req.body
 
-const update = async (walletId) => {
   try {
-    const transactions = await Transaction.find({ walletId })
-    let totalAmount = 0
-
-    // Hitung total jumlah transaksi dalam dompet
-    transactions.forEach((transaction) => {
-      if (transaction.type === 'income') {
-        totalAmount += transaction.amount
-      } else if (transaction.type === 'expense') {
-        totalAmount -= transaction.amount
-      }
-    })
-
-    // Perbarui saldo dompet
-    const wallet = await Wallet.findById(walletId)
-    if (!wallet) {
-      throw new Error('Dompet tidak ditemukan')
+    const transaction = await Transaction.findById(transactionId)
+    if (!transaction) {
+      return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
     }
-    wallet.balance = totalAmount
-    await wallet.save()
 
-    console.log(`Saldo dompet dengan ID ${walletId} berhasil diperbarui menjadi ${totalAmount}`)
-  } catch (error) {
-    console.error(`Gagal memperbarui saldo dompet: ${error.message}`)
-    throw error
+    // Simpan nilai dompet lama sebelum mengubah ID dompet
+    const oldWalletId = transaction.walletId
+
+    if (amount) transaction.amount = cleanAndValidateInput(amount)
+    if (description) transaction.description = cleanAndValidateInput(description)
+    if (categoryId) transaction.category = categoryId
+    if (date) transaction.date = date
+    if (walletId) transaction.walletId = walletId // Mengubah ID dompet
+
+    await transaction.save()
+
+    // Jika dompet transaksi berubah, perbarui saldo dompet lama dan baru
+    if (walletId !== oldWalletId) {
+      await updateWalletBalance(oldWalletId)
+      await updateWalletBalance(walletId)
+    }
+
+    sendResponse(res, true, 'Transaksi berhasil diperbarui, nih!', 200, transaction)
+  } catch (err) {
+    console.log('err', err)
+    if (err.name === 'ValidationError') {
+      sendResponse(res, false, 'Validasi gagal, nih!', 400, err.errors)
+    } else {
+      sendResponse(res, false, 'Gagal memperbarui transaksi, nih!', 500)
+    }
   }
 }
 
@@ -182,12 +190,23 @@ const deleteTransaction = async (req, res) => {
       return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
     }
 
-    await Transaction.findByIdAndRemove(transactionId)
+    // Dapatkan ID dompet terkait dan jumlah transaksi
+    const { walletId, amount } = transaction
 
-    await updateWalletBalance(transaction.walletId)
+    // Kurangkan jumlah transaksi dari saldo dompet
+    const wallet = await Wallet.findById(walletId)
+    if (!wallet) {
+      return sendResponse(res, false, 'Dompet tidak ditemukan, nih!', 404)
+    }
+    wallet.balance -= amount
+    await wallet.save()
+
+    // Hapus transaksi dari basis data
+    await Transaction.findByIdAndDelete(transactionId)
 
     sendResponse(res, true, 'Transaksi berhasil dihapus, nih!', 200)
   } catch (err) {
+    console.log('err', err)
     sendResponse(res, false, 'Gagal menghapus transaksi, nih!', 500)
   }
 }
