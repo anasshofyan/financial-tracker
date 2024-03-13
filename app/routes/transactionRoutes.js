@@ -3,7 +3,7 @@ const router = express.Router()
 const transactionController = require('../controllers/transactionController')
 const { verifyToken } = require('../middlewares/authMiddleware')
 
-router.get('/', verifyToken, transactionController.getList)
+router.get('/', verifyToken, transactionController.getTransactionByWallet)
 router.get('/:id', verifyToken, transactionController.getDetail)
 router.post('/', verifyToken, transactionController.create)
 router.put('/:id', verifyToken, transactionController.update)

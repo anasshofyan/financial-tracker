@@ -1,7 +1,6 @@
 const Transaction = require('../models/transactionModel')
 const Category = require('../models/categoryModel')
 const { sendResponse } = require('../utils/response.js')
-const { formatDate } = require('../utils/formatDate.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 const Wallet = require('../models/walletModel.js')
 
@@ -14,18 +13,18 @@ const create = async (req, res) => {
 
   try {
     if (!amount || !description || !categoryId || !date || !walletId) {
-      return sendResponse(res, false, 'Semua field harus diisi!', 400)
+      return sendResponse(res, false, 'Semua isian harus diisi, nih!', 400)
     }
 
     const category = await Category.findById(categoryId)
     const wallet = await Wallet.findById(walletId)
 
     if (!category) {
-      return sendResponse(res, false, 'Category Not Found', 400, {})
+      return sendResponse(res, false, 'Kategori gak ditemukan, nih!', 400, {})
     }
 
     if (!wallet) {
-      return sendResponse(res, false, 'Wallet Not Found', 400, {})
+      return sendResponse(res, false, 'Dompet gak ditemukan, nih!', 400, {})
     }
 
     const type = category.type
@@ -42,33 +41,36 @@ const create = async (req, res) => {
 
     const savedTransaction = await newTransaction.save()
 
-    sendResponse(res, true, 'Transaction created successfully', 201, savedTransaction)
+    await updateWalletBalance(walletId)
+
+    sendResponse(res, true, 'Transaksi berhasil dibuat, nih!', 201, savedTransaction)
   } catch (err) {
     if (err.name === 'ValidationError') {
-      sendResponse(res, false, 'Validation failed', 400, err.errors)
+      sendResponse(res, false, 'Validasi gagal, nih!', 400, err.errors)
     } else {
-      sendResponse(res, false, 'Failed to create transaction', 500)
+      sendResponse(res, false, 'Gagal membuat transaksi, nih!', 500)
     }
   }
 }
 
-const getList = async (req, res) => {
+const getTransactionByWallet = async (req, res) => {
   try {
     const loggedInUserId = req.decoded.user.id
-    const { startDate, endDate } = req.query
+    const { startDate, endDate, walletId } = req.query
 
-    const dateFilter = {
+    const filter = {
       createdBy: loggedInUserId,
+      walletId: walletId,
     }
 
     if (startDate && endDate) {
       const start = new Date(startDate)
       const end = new Date(endDate)
 
-      dateFilter.date = { $gte: start, $lte: end }
+      filter.date = { $gte: start, $lte: end }
     }
 
-    const transactions = await Transaction.find(dateFilter).populate({
+    const transactions = await Transaction.find(filter).populate({
       path: 'category',
       model: 'Category',
     })
@@ -143,69 +145,85 @@ const getDetail = async (req, res) => {
 }
 
 const update = async (req, res) => {
-  const { id } = req.params
-  const loggedInUserId = req.decoded.user.id
-  let { amount, description, categoryId, date } = req.body
-
-  amount = cleanAndValidateInput(amount)
-  description = cleanAndValidateInput(description)
-
-  if (!amount || !description || !categoryId || !date) {
-    return sendResponse(res, false, 'Semua field harus diisi!', 400)
-  }
+  const transactionId = req.params.id
+  const { amount, description, categoryId, date, walletId } = req.body
 
   try {
-    let transaction = await Transaction.findById(id).populate('category')
-
+    const transaction = await Transaction.findById(transactionId)
     if (!transaction) {
-      return sendResponse(res, false, 'Transaction not found', 404)
+      return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
     }
 
-    if (transaction.createdBy.toString() !== loggedInUserId.toString()) {
-      return sendResponse(res, false, 'Unauthorized', 401)
+    if (amount) transaction.amount = cleanAndValidateInput(amount)
+    if (description) transaction.description = cleanAndValidateInput(description)
+    if (categoryId) transaction.category = categoryId
+    if (date) transaction.date = date
+    if (walletId) transaction.walletId = walletId // Mengubah ID dompet
+
+    await transaction.save()
+
+    // Update sisa saldo di dompet yang lama
+    await updateWalletBalance(transaction.walletId)
+    // Update sisa saldo di dompet yang baru
+    if (walletId !== transaction.walletId) {
+      await updateWalletBalance(walletId)
     }
 
-    const category = await Category.findById(categoryId)
-
-    if (!category) {
-      return sendResponse(res, false, 'Category Not Found', 400, {})
-    }
-
-    transaction.amount = amount
-    transaction.description = description
-    transaction.categoryId = categoryId
-    transaction.date = date
-    transaction.type = category.type
-    transaction.category = category
-    transaction = await transaction.save()
-
-    sendResponse(res, true, 'Update transaction success', 200, transaction)
+    sendResponse(res, true, 'Transaksi berhasil diperbarui, nih!', 200, transaction)
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return sendResponse(res, false, 'Validation failed', 400, err.errors)
+      sendResponse(res, false, 'Validasi gagal, nih!', 400, err.errors)
+    } else {
+      sendResponse(res, false, 'Gagal memperbarui transaksi, nih!', 500)
     }
-    sendResponse(res, false, 'Failed to update transaction', 500)
   }
 }
 
 const deleteTransaction = async (req, res) => {
-  const { id } = req.params
-
-  if (!id) {
-    return sendResponse(res, false, 'Transaction not found', 404)
-  }
+  const transactionId = req.params.id
 
   try {
-    const transaction = await Transaction.findByIdAndDelete(id)
-    sendResponse(res, true, 'Delete transaction success', 200, transaction)
+    const transaction = await Transaction.findById(transactionId)
+    if (!transaction) {
+      return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
+    }
+
+    await Transaction.findByIdAndRemove(transactionId)
+
+    await updateWalletBalance(transaction.walletId)
+
+    sendResponse(res, true, 'Transaksi berhasil dihapus, nih!', 200)
   } catch (err) {
-    sendResponse(res, false, 'Failed to delete transaction', 500)
+    sendResponse(res, false, 'Gagal menghapus transaksi, nih!', 500)
+  }
+}
+
+const updateWalletBalance = async (walletId) => {
+  try {
+    const transactions = await Transaction.find({ walletId })
+    const { totalIncome, totalExpense } = transactions.reduce(
+      (acc, transaction) => {
+        if (transaction.type === 'income') {
+          acc.totalIncome += transaction.amount
+        } else if (transaction.type === 'expense') {
+          acc.totalExpense += transaction.amount
+        }
+        return acc
+      },
+      { totalIncome: 0, totalExpense: 0 },
+    )
+
+    const remainingBalance = totalIncome - totalExpense
+
+    await Wallet.findByIdAndUpdate(walletId, { balance: remainingBalance })
+  } catch (err) {
+    throw new Error('Gagal memperbarui saldo dompet')
   }
 }
 
 module.exports = {
   create,
-  getList,
+  getTransactionByWallet,
   getDetail,
   update,
   deleteTransaction,
