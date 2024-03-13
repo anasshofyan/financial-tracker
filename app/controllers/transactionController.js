@@ -60,7 +60,10 @@ const getTransactionByWallet = async (req, res) => {
 
     const filter = {
       createdBy: loggedInUserId,
-      walletId: walletId,
+    }
+
+    if (walletId) {
+      filter.walletId = walletId
     }
 
     if (startDate && endDate) {
