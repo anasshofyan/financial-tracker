@@ -16,6 +16,7 @@ const userSchema = new Schema(
       minlength: 6,
     },
     cycleStartDate: { type: String, default: '1' },
+    selectedWallet: { type: String },
     darkMode: { type: Boolean, default: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     googleId: { type: String },

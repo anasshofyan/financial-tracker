@@ -2,6 +2,7 @@ const User = require('../models/userModel')
 const bcrypt = require('bcryptjs')
 const { sendResponse } = require('../utils/response.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
+const Wallet = require('../models/walletModel.js')
 
 const getList = async (req, res) => {
   try {
@@ -25,7 +26,9 @@ const getMe = async (req, res) => {
 const getSetting = async (req, res) => {
   const loggedInUserId = req.decoded.user.id
   try {
-    const user = await User.findById(loggedInUserId).select('cycleStartDate darkMode')
+    const user = await User.findById(loggedInUserId).select(
+      'cycleStartDate darkMode selectedWallet',
+    )
     sendResponse(res, true, 'Get user setting success', 200, user)
   } catch (err) {
     sendResponse(res, false, 'Failed to get user setting', 500)
@@ -34,9 +37,10 @@ const getSetting = async (req, res) => {
 
 const setting = async (req, res) => {
   const loggedInUserId = req.decoded.user.id
-  const { cycleStartDate, darkMode } = req.body
+  const { cycleStartDate, darkMode, selectedWallet } = req.body
   try {
     let updateFields = {}
+
     if (cycleStartDate) {
       const startDate = parseInt(cycleStartDate, 10)
       if (isNaN(startDate) || startDate < 1 || startDate > 31) {
@@ -49,7 +53,16 @@ const setting = async (req, res) => {
       updateFields.darkMode = darkMode
     }
 
-    const user = await User.findByIdAndUpdate(loggedInUserId, updateFields, { new: true })
+    const wallet = await Wallet.findOne({ _id: selectedWallet, createBy: loggedInUserId })
+
+    if (!wallet) {
+      sendResponse(res, false, 'Dompet tidak ditemukan!', 404)
+      return
+    }
+
+    const user = await User.findByIdAndUpdate(loggedInUserId, updateFields, selectedWallet, {
+      new: true,
+    })
 
     let successMessage = 'Siklus tanggal awal berhasil disimpan!'
     if (darkMode !== undefined) {
