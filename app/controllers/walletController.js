@@ -94,7 +94,7 @@ const updateWallet = async (req, res) => {
     wallet.bgWallet = bgWallet
     await wallet.save()
 
-    sendResponse(res, true, 'Wallet berhasil diupdate!', 200, wallet)
+    sendResponse(res, true, 'Wallet berhasil di update!', 200, wallet)
   } catch (error) {
     sendResponse(res, false, 'Failed to update wallet', 500)
   }
