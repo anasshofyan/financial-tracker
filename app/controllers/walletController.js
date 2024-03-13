@@ -38,6 +38,29 @@ const getWallets = async (req, res) => {
   }
 }
 
+const getDetailWallet = async (req, res) => {
+  try {
+    const { id } = req.params
+    const loggedInUserId = req.decoded.user.id
+
+    if (!id) {
+      sendResponse(res, false, 'Wallet id harus diisi', 400)
+      return
+    }
+
+    const wallet = await Wallet.findOne({ _id: id, createBy: loggedInUserId })
+
+    if (!wallet) {
+      sendResponse(res, false, 'Wallet tidak ditemukan', 404)
+      return
+    }
+
+    sendResponse(res, true, 'Get detail wallet success', 200, wallet)
+  } catch (error) {
+    sendResponse(res, false, 'Failed to get detail wallet', 500)
+  }
+}
+
 const getTransactionByWallet = async (req, res) => {
   try {
     const { id } = req.params
@@ -115,4 +138,11 @@ const deleteWallet = async (req, res) => {
   }
 }
 
-module.exports = { createWallet, getWallets, getTransactionByWallet, updateWallet, deleteWallet }
+module.exports = {
+  createWallet,
+  getWallets,
+  getTransactionByWallet,
+  updateWallet,
+  deleteWallet,
+  getDetailWallet,
+}
