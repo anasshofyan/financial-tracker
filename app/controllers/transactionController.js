@@ -144,38 +144,32 @@ const getDetail = async (req, res) => {
   }
 }
 
-const update = async (req, res) => {
-  const transactionId = req.params.id
-  const { amount, description, categoryId, date, walletId } = req.body
-
+const update = async (walletId) => {
   try {
-    const transaction = await Transaction.findById(transactionId)
-    if (!transaction) {
-      return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
+    const transactions = await Transaction.find({ walletId })
+    let totalAmount = 0
+
+    // Hitung total jumlah transaksi dalam dompet
+    transactions.forEach((transaction) => {
+      if (transaction.type === 'income') {
+        totalAmount += transaction.amount
+      } else if (transaction.type === 'expense') {
+        totalAmount -= transaction.amount
+      }
+    })
+
+    // Perbarui saldo dompet
+    const wallet = await Wallet.findById(walletId)
+    if (!wallet) {
+      throw new Error('Dompet tidak ditemukan')
     }
+    wallet.balance = totalAmount
+    await wallet.save()
 
-    if (amount) transaction.amount = cleanAndValidateInput(amount)
-    if (description) transaction.description = cleanAndValidateInput(description)
-    if (categoryId) transaction.category = categoryId
-    if (date) transaction.date = date
-    if (walletId) transaction.walletId = walletId // Mengubah ID dompet
-
-    await transaction.save()
-
-    // Update sisa saldo di dompet yang lama
-    await updateWalletBalance(transaction.walletId)
-    // Update sisa saldo di dompet yang baru
-    if (walletId !== transaction.walletId) {
-      await updateWalletBalance(walletId)
-    }
-
-    sendResponse(res, true, 'Transaksi berhasil diperbarui, nih!', 200, transaction)
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      sendResponse(res, false, 'Validasi gagal, nih!', 400, err.errors)
-    } else {
-      sendResponse(res, false, 'Gagal memperbarui transaksi, nih!', 500)
-    }
+    console.log(`Saldo dompet dengan ID ${walletId} berhasil diperbarui menjadi ${totalAmount}`)
+  } catch (error) {
+    console.error(`Gagal memperbarui saldo dompet: ${error.message}`)
+    throw error
   }
 }
 
