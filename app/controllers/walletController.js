@@ -2,6 +2,7 @@ const Wallet = require('../models/walletModel.js')
 const { sendResponse } = require('../utils/response.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 const Transaction = require('../models/transactionModel.js')
+const Category = require('../models/categoryModel.js')
 
 const createWallet = async (req, res) => {
   try {
@@ -12,31 +13,32 @@ const createWallet = async (req, res) => {
     emoji = cleanAndValidateInput(emoji)
     balance = cleanAndValidateInput(balance)
 
-    if (!name || !emoji || !balance || !bgWallet) {
+    if (!name || !emoji || balance === undefined || !bgWallet) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
     }
 
+    // Konversi saldo awal menjadi angka
+    balance = parseFloat(balance)
+
     const wallet = new Wallet({ name, emoji, balance, bgWallet, createBy: loggedInUserId })
     await wallet.save()
 
-    // Temukan kategori "Pemasukan Lainnya"
-    const incomeCategory = await Category.findOne({ name: 'Pemasukan Lainnya' })
-
-    if (!incomeCategory) {
-      sendResponse(res, false, 'Kategori "Pemasukan Lainnya" tidak ditemukan', 404)
-      return
-    }
-
-    // Membuat transaksi dengan kategori "Pemasukan Lainnya" untuk saldo awal
-    if (balance < 0) {
-      return sendResponse(res, false, 'Saldo awal tidak boleh kurang dari 0', 400)
-    }
-
+    // Jika saldo awal tidak nol, buat transaksi
     if (balance !== 0) {
+      // Temukan kategori "Pemasukan Lainnya"
+      const incomeCategory = await Category.findOne({ name: 'Pemasukan Lainnya' })
+
+      if (!incomeCategory) {
+        sendResponse(res, false, 'Kategori "Pemasukan Lainnya" tidak ditemukan', 404)
+        return
+      }
+
+      // Membuat transaksi dengan kategori "Pemasukan Lainnya" untuk saldo awal
       const initialTransaction = new Transaction({
-        wallet: wallet._id,
+        walletId: wallet._id,
         amount: balance,
+        type: incomeCategory.type,
         category: incomeCategory._id,
         description: 'Saldo Awal',
         createdBy: loggedInUserId,
@@ -46,6 +48,7 @@ const createWallet = async (req, res) => {
 
     sendResponse(res, true, 'Yeay! dompet berhasil dibuat!', 200, wallet)
   } catch (error) {
+    console.log(error)
     sendResponse(res, false, 'Gagal membuat dompet', 500)
   }
 }
@@ -115,7 +118,7 @@ const updateWallet = async (req, res) => {
 
     name = cleanAndValidateInput(name)
     emoji = cleanAndValidateInput(emoji)
-    balance = cleanAndValidateInput(balance)
+    balance = parseFloat(cleanAndValidateInput(balance)) // Ubah ke tipe data float
 
     if (!name || !emoji || !balance || !bgWallet) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
@@ -165,7 +168,7 @@ const updateWallet = async (req, res) => {
       return
     }
 
-    // Membuat transaksi baru jika ada perubahan saldo
+    // Membuat transaksi baru jika ada perubahan saldo yang terjadi
     if (balanceDiff !== 0) {
       let category = null
       let description = null
@@ -174,13 +177,16 @@ const updateWallet = async (req, res) => {
       if (balanceDiff > 0) {
         category = pemasukanLainnyaCategory._id
         description = 'Tambah Saldo'
+        type = pemasukanLainnyaCategory.type
       } else {
         category = pengeluaranLainnyaCategory._id
         description = 'Kurangi Saldo'
+        type = pengeluaranLainnyaCategory.type
       }
 
       const newTransaction = new Transaction({
-        wallet: wallet._id,
+        type,
+        walletId: wallet._id,
         amount,
         category,
         description,
@@ -192,6 +198,7 @@ const updateWallet = async (req, res) => {
 
     sendResponse(res, true, 'Dompet berhasil diperbarui', 200, wallet)
   } catch (error) {
+    console.log(error)
     sendResponse(res, false, 'Gagal memperbarui dompet', 500)
   }
 }
