@@ -12,8 +12,6 @@ const createWallet = async (req, res) => {
     emoji = cleanAndValidateInput(emoji)
     balance = cleanAndValidateInput(balance)
 
-    console.log(name, emoji, balance)
-
     if (!name || !emoji || !balance || !bgWallet) {
       sendResponse(res, false, 'Semua field harus diisi!', 400)
       return
