@@ -68,6 +68,7 @@ const register = async (req, res) => {
       { emoji: '📡', name: 'Internet', type: 'expense', createdBy: savedUser._id },
       { emoji: '🏥', name: 'Kesehatan', type: 'expense', createdBy: savedUser._id },
       { emoji: '📚', name: 'Buku', type: 'expense', createdBy: savedUser._id },
+      { emoji: '💸', name: 'Pemasukan Lainnya', type: 'income', createdBy: savedUser._id },
     ]
 
     await Category.insertMany(defaultCategories)
