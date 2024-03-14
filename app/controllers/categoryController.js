@@ -180,12 +180,27 @@ const deleteCategory = async (req, res) => {
   const loggedInUserId = req.decoded.user.id
 
   try {
+    const categoryToDelete = await Category.findOne({ _id: id, createdBy: loggedInUserId })
+
+    if (!categoryToDelete) {
+      return sendResponse(
+        res,
+        false,
+        'Oops, kategori tidak ditemukan dan tidak memiliki izin untuk mengaksesnya!',
+        404,
+      )
+    }
+
+    if (categoryToDelete.name === 'Pemasukan Lainnya') {
+      return sendResponse(res, false, 'Oops, kategori ini tidak dapat dihapus!', 400)
+    }
+
     await Category.findByIdAndDelete({ _id: id, createdBy: loggedInUserId })
     await Transaction.deleteMany({ category: id })
 
-    sendResponse(res, true, 'Category deleted successfully', 200)
+    sendResponse(res, true, `Yeay, kategori ${categoryToDelete.name} telah dihapus!`, 200)
   } catch (err) {
-    sendResponse(res, false, 'Failed to delete category', 500)
+    sendResponse(res, false, 'Gagal menghapus kategori!', 500)
   }
 }
 
