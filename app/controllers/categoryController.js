@@ -125,7 +125,12 @@ const update = async (req, res) => {
       return sendResponse(res, false, 'Emoji, name, and type harus diisi nih!', 400)
     }
 
+    if (name === 'Pemasukan Lainnya' || name === 'Pengeluaran Lainnya') {
+      return sendResponse(res, false, 'Anda tidak diizinkan untuk mengedit kategori ini!', 403)
+    }
+
     const userCategories = await Category.find({ createdBy: loggedInUserId })
+
     const isIdvalid = id ? userCategories.some((category) => category._id.toString() === id) : true
     const isParentIdValid = parentId
       ? userCategories.some((category) => category._id.toString() === parentId)
