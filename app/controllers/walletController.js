@@ -19,9 +19,34 @@ const createWallet = async (req, res) => {
 
     const wallet = new Wallet({ name, emoji, balance, bgWallet, createBy: loggedInUserId })
     await wallet.save()
+
+    // Temukan kategori "Pemasukan Lainnya"
+    const incomeCategory = await Category.findOne({ name: 'Pemasukan Lainnya' })
+
+    if (!incomeCategory) {
+      sendResponse(res, false, 'Kategori "Pemasukan Lainnya" tidak ditemukan', 404)
+      return
+    }
+
+    // Membuat transaksi dengan kategori "Pemasukan Lainnya" untuk saldo awal
+    if (balance < 0) {
+      return sendResponse(res, false, 'Saldo awal tidak boleh kurang dari 0', 400)
+    }
+
+    if (balance !== 0) {
+      const initialTransaction = new Transaction({
+        wallet: wallet._id,
+        amount: balance,
+        category: incomeCategory._id,
+        description: 'Saldo Awal',
+        createdBy: loggedInUserId,
+      })
+      await initialTransaction.save()
+    }
+
     sendResponse(res, true, 'Yeay! dompet berhasil dibuat!', 200, wallet)
   } catch (error) {
-    sendResponse(res, false, 'Failed to create wallet', 500)
+    sendResponse(res, false, 'Gagal membuat dompet', 500)
   }
 }
 
@@ -100,7 +125,7 @@ const updateWallet = async (req, res) => {
     const wallet = await Wallet.findById(id)
 
     if (!wallet) {
-      sendResponse(res, false, 'Wallet not found', 404)
+      sendResponse(res, false, 'Dompet tidak ditemukan', 404)
       return
     }
 
@@ -109,15 +134,65 @@ const updateWallet = async (req, res) => {
       return
     }
 
+    // Perhitungan perubahan saldo
+    const balanceDiff = balance - wallet.balance
+
     wallet.name = name
     wallet.emoji = emoji
     wallet.balance = balance
     wallet.bgWallet = bgWallet
     await wallet.save()
 
-    sendResponse(res, true, 'Wallet berhasil di update!', 200, wallet)
+    // Temukan kategori "Pemasukan Lainnya"
+    const pemasukanLainnyaCategory = await Category.findOne({
+      name: 'Pemasukan Lainnya',
+      createdBy: loggedInUserId,
+    })
+
+    if (!pemasukanLainnyaCategory) {
+      sendResponse(res, false, 'Kategori "Pemasukan Lainnya" tidak ditemukan', 404)
+      return
+    }
+
+    // Temukan kategori "Pengeluaran Lainnya"
+    const pengeluaranLainnyaCategory = await Category.findOne({
+      name: 'Pengeluaran Lainnya',
+      createdBy: loggedInUserId,
+    })
+
+    if (!pengeluaranLainnyaCategory) {
+      sendResponse(res, false, 'Kategori "Pengeluaran Lainnya" tidak ditemukan', 404)
+      return
+    }
+
+    // Membuat transaksi baru jika ada perubahan saldo
+    if (balanceDiff !== 0) {
+      let category = null
+      let description = null
+      let amount = Math.abs(balanceDiff)
+
+      if (balanceDiff > 0) {
+        category = pemasukanLainnyaCategory._id
+        description = 'Tambah Saldo'
+      } else {
+        category = pengeluaranLainnyaCategory._id
+        description = 'Kurangi Saldo'
+      }
+
+      const newTransaction = new Transaction({
+        wallet: wallet._id,
+        amount,
+        category,
+        description,
+        createdBy: loggedInUserId,
+      })
+
+      await newTransaction.save()
+    }
+
+    sendResponse(res, true, 'Dompet berhasil diperbarui', 200, wallet)
   } catch (error) {
-    sendResponse(res, false, 'Failed to update wallet', 500)
+    sendResponse(res, false, 'Gagal memperbarui dompet', 500)
   }
 }
 
