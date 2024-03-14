@@ -146,40 +146,56 @@ const getDetail = async (req, res) => {
     sendResponse(res, false, 'Failed to get transaction detail', 500)
   }
 }
+
 const update = async (req, res) => {
-  const transactionId = req.params.id
-  const { amount, description, categoryId, date, walletId } = req.body
+  const loggedInUserId = req.decoded.user.id
+  const { id } = req.params
+  let { amount, description, categoryId, date, walletId } = req.body
+
+  amount = cleanAndValidateInput(amount)
+  description = cleanAndValidateInput(description)
 
   try {
-    const transaction = await Transaction.findById(transactionId)
+    if (!amount || !description || !categoryId || !date || !walletId) {
+      return sendResponse(res, false, 'All fields must be filled', 400)
+    }
+
+    const category = await Category.findById(categoryId)
+
+    if (!category) {
+      return sendResponse(res, false, 'Category not found', 400)
+    }
+
+    const transaction = await Transaction.findOne({ _id: id, createdBy: loggedInUserId })
+
     if (!transaction) {
-      return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
+      return sendResponse(
+        res,
+        false,
+        'Transaction not found or you do not have permission to access',
+        404,
+      )
     }
 
-    // Simpan nilai dompet lama sebelum mengubah ID dompet
-    const oldWalletId = transaction.walletId
-
-    if (amount) transaction.amount = cleanAndValidateInput(amount)
-    if (description) transaction.description = cleanAndValidateInput(description)
-    if (categoryId) transaction.category = categoryId
-    if (date) transaction.date = date
-    if (walletId) transaction.walletId = walletId // Mengubah ID dompet
-
-    await transaction.save()
-
-    // Jika dompet transaksi berubah, perbarui saldo dompet lama dan baru
-    if (walletId !== oldWalletId) {
-      await updateWalletBalance(oldWalletId)
-      await updateWalletBalance(walletId)
+    if (walletId && walletId !== transaction.walletId) {
+      return sendResponse(res, false, 'You cannot change the wallet of this transaction', 400)
     }
 
-    sendResponse(res, true, 'Transaksi berhasil diperbarui, nih!', 200, transaction)
+    transaction.amount = amount
+    transaction.description = description
+    transaction.category = categoryId
+    transaction.date = date
+
+    const updatedTransaction = await transaction.save()
+
+    await updateWalletBalance(transaction.walletId)
+
+    sendResponse(res, true, 'Transaction updated successfully', 200, updatedTransaction)
   } catch (err) {
-    console.log('err', err)
     if (err.name === 'ValidationError') {
-      sendResponse(res, false, 'Validasi gagal, nih!', 400, err.errors)
+      sendResponse(res, false, 'Validation failed', 400, err.errors)
     } else {
-      sendResponse(res, false, 'Gagal memperbarui transaksi, nih!', 500)
+      sendResponse(res, false, 'Failed to update transaction', 500)
     }
   }
 }
@@ -189,28 +205,31 @@ const deleteTransaction = async (req, res) => {
 
   try {
     const transaction = await Transaction.findById(transactionId)
+
     if (!transaction) {
-      return sendResponse(res, false, 'Transaksi tidak ditemukan, nih!', 404)
+      return sendResponse(res, false, 'Transaksi tidak ditemukan', 404)
     }
 
-    // Dapatkan ID dompet terkait dan jumlah transaksi
     const { walletId, amount } = transaction
 
-    // Kurangkan jumlah transaksi dari saldo dompet
-    const wallet = await Wallet.findById(walletId)
-    if (!wallet) {
-      return sendResponse(res, false, 'Dompet tidak ditemukan, nih!', 404)
-    }
-    wallet.balance -= amount
-    await wallet.save()
+    // Periksa apakah ada dompet terkait
+    if (walletId) {
+      const wallet = await Wallet.findById(walletId)
 
-    // Hapus transaksi dari basis data
+      if (!wallet) {
+        return sendResponse(res, false, 'Dompet tidak ditemukan', 404)
+      }
+
+      wallet.balance -= amount
+      await wallet.save()
+    }
+
     await Transaction.findByIdAndDelete(transactionId)
 
-    sendResponse(res, true, 'Transaksi berhasil dihapus, nih!', 200)
+    sendResponse(res, true, 'Transaksi berhasil dihapus', 200)
   } catch (err) {
     console.log('err', err)
-    sendResponse(res, false, 'Gagal menghapus transaksi, nih!', 500)
+    sendResponse(res, false, 'Gagal menghapus transaksi', 500)
   }
 }
 
