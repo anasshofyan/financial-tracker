@@ -191,7 +191,10 @@ const deleteCategory = async (req, res) => {
       )
     }
 
-    if (categoryToDelete.name === 'Pemasukan Lainnya') {
+    if (
+      categoryToDelete.name === 'Pemasukan Lainnya' ||
+      categoryToDelete.name === 'Pengeluaran Lainnya'
+    ) {
       return sendResponse(res, false, 'Oops, kategori ini tidak dapat dihapus!', 400)
     }
 
