@@ -73,10 +73,16 @@ const getTransactionByWallet = async (req, res) => {
       filter.date = { $gte: start, $lte: end }
     }
 
-    const transactions = await Transaction.find(filter).populate({
-      path: 'category',
-      model: 'Category',
-    })
+    const transactions = await Transaction.find(filter).populate([
+      {
+        path: 'category',
+        model: 'Category',
+      },
+      {
+        path: 'walletId',
+        model: 'Wallet',
+      },
+    ])
 
     let totalIncome = 0
     let totalExpense = 0
@@ -121,6 +127,7 @@ const getTransactionByWallet = async (req, res) => {
       remainingBalance,
     })
   } catch (err) {
+    console.log('err', err)
     sendResponse(res, false, 'Failed to get list transaction', 500)
   }
 }
