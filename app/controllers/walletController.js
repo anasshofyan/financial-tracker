@@ -3,6 +3,7 @@ const { sendResponse } = require('../utils/response.js')
 const { cleanAndValidateInput } = require('../utils/cleanAndValidateInput.js')
 const Transaction = require('../models/transactionModel.js')
 const Category = require('../models/categoryModel.js')
+const { formatDate } = require('../utils/formatDate.js')
 
 const createWallet = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ const createWallet = async (req, res) => {
       // Membuat transaksi dengan kategori "Pemasukan Lainnya" untuk saldo awal
       const initialTransaction = new Transaction({
         walletId: wallet._id,
-        date: new Date(),
+        date: formatDate(new Date(), 'yyyy-MM-dd'),
         amount: balance,
         type: incomeCategory.type,
         category: incomeCategory._id,
@@ -190,7 +191,7 @@ const updateWallet = async (req, res) => {
         amount,
         category,
         description,
-        date: new Date(),
+        date: formatDate(new Date(), 'yyyy-MM-dd'),
         walletId: wallet._id,
         createdBy: loggedInUserId,
       })

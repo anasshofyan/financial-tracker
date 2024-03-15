@@ -1,7 +1,7 @@
 const { format } = require('date-fns')
 
-const formatDate = (date) => {
-  return format(new Date(date), 'd MMMM yyyy')
+const formatDate = (date, formatString = 'd MMMM yyyy') => {
+  return format(new Date(date), formatString)
 }
 
 module.exports = { formatDate }
