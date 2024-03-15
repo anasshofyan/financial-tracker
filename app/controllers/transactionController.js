@@ -177,9 +177,9 @@ const update = async (req, res) => {
       )
     }
 
-    if (walletId !== transaction.walletId) {
-      return sendResponse(res, false, 'You cannot change the wallet of this transaction', 400)
-    }
+    // if (walletId !== transaction.walletId) {
+    //   return sendResponse(res, false, 'You cannot change the wallet of this transaction', 400)
+    // }
 
     transaction.amount = amount
     transaction.description = description
