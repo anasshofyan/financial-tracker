@@ -235,21 +235,23 @@ const deleteTransaction = async (req, res) => {
 
 const updateWalletBalance = async (walletId) => {
   try {
-    const transactions = await Transaction.find({ walletId })
-    const { totalIncome, totalExpense } = transactions.reduce(
-      (acc, transaction) => {
-        if (transaction.type === 'income') {
-          acc.totalIncome += transaction.amount
-        } else if (transaction.type === 'expense') {
-          acc.totalExpense += transaction.amount
-        }
-        return acc
-      },
-      { totalIncome: 0, totalExpense: 0 },
-    )
+    const transactions = await Transaction.find({ walletId }).populate({
+      path: 'category',
+      model: 'Category',
+    })
+
+    let totalIncome = 0
+    let totalExpense = 0
+
+    transactions.forEach((transaction) => {
+      if (transaction.type === 'income') {
+        totalIncome += transaction.amount
+      } else if (transaction.type === 'expense') {
+        totalExpense += transaction.amount
+      }
+    })
 
     const remainingBalance = totalIncome - totalExpense
-
     await Wallet.findByIdAndUpdate(walletId, { balance: remainingBalance })
   } catch (err) {
     throw new Error('Gagal memperbarui saldo dompet')
