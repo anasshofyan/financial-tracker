@@ -37,6 +37,7 @@ const createWallet = async (req, res) => {
       // Membuat transaksi dengan kategori "Pemasukan Lainnya" untuk saldo awal
       const initialTransaction = new Transaction({
         walletId: wallet._id,
+        date: new Date(),
         amount: balance,
         type: incomeCategory.type,
         category: incomeCategory._id,
@@ -186,10 +187,11 @@ const updateWallet = async (req, res) => {
 
       const newTransaction = new Transaction({
         type,
-        walletId: wallet._id,
         amount,
         category,
         description,
+        date: new Date(),
+        walletId: wallet._id,
         createdBy: loggedInUserId,
       })
 
