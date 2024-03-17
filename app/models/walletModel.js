@@ -6,6 +6,7 @@ const walletSchema = new Schema(
     emoji: { type: String, default: '💰' },
     name: { type: String, default: 'Dompet Cerdas', required: true },
     balance: { type: Number, default: 0 },
+    excludeFromTotal: { type: Boolean, default: false },
     bgWallet: { type: String, default: '#27B427' },
     createBy: { type: Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now },

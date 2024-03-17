@@ -184,10 +184,6 @@ const update = async (req, res) => {
       )
     }
 
-    // if (walletId !== transaction.walletId) {
-    //   return sendResponse(res, false, 'You cannot change the wallet of this transaction', 400)
-    // }
-
     transaction.amount = amount
     transaction.description = description
     transaction.category = categoryId
@@ -217,21 +213,9 @@ const deleteTransaction = async (req, res) => {
       return sendResponse(res, false, 'Transaksi tidak ditemukan', 404)
     }
 
-    const { walletId, amount } = transaction
-
-    // Periksa apakah ada dompet terkait
-    if (walletId) {
-      const wallet = await Wallet.findById(walletId)
-
-      if (!wallet) {
-        return sendResponse(res, false, 'Dompet tidak ditemukan', 404)
-      }
-
-      wallet.balance -= amount
-      await wallet.save()
-    }
-
     await Transaction.findByIdAndDelete(transactionId)
+
+    await updateWalletBalance(transaction.walletId)
 
     sendResponse(res, true, 'Transaksi berhasil dihapus', 200)
   } catch (err) {
