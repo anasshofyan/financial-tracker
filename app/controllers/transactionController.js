@@ -193,8 +193,14 @@ const update = async (req, res) => {
     const updatedTransaction = await transaction.save()
 
     await updateWalletBalance(transaction.walletId)
-
-    sendResponse(res, true, 'Transaction updated successfully', 200, updatedTransaction)
+    s
+    sendResponse(
+      res,
+      true,
+      `${updatedTransaction.description} telah diubah!`,
+      200,
+      updatedTransaction,
+    )
   } catch (err) {
     if (err.name === 'ValidationError') {
       sendResponse(res, false, 'Validation failed', 400, err.errors)
@@ -218,7 +224,12 @@ const deleteTransaction = async (req, res) => {
 
     await updateWalletBalance(transaction.walletId)
 
-    sendResponse(res, true, 'Transaksi berhasil dihapus', 200)
+    sendResponse(
+      res,
+      true,
+      `${transaction.category.emoji} ${transaction.description} telah dihapus!`,
+      200,
+    )
   } catch (err) {
     console.log('err', err)
     sendResponse(res, false, 'Gagal menghapus transaksi', 500)
